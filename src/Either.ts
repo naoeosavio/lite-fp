@@ -5,8 +5,6 @@ export type Either<A, B> = Left<A> | Right<B>;
 // Standalone constructors and ops (module-free style)
 export const left = <A>(value: A): Left<A> => ({ $: "Left", value });
 export const right = <B>(value: B): Right<B> => ({ $: "Right", value });
-export const make = <A, B>(rgt: B, lft: A): Either<A, B> =>
-  rgt == null ? left(lft) : right(rgt);
 
 export const isLeft = <A, B>(e: Either<A, B>): e is Left<A> => e.$ === "Left";
 export const isRight = <A, B>(e: Either<A, B>): e is Right<B> =>
@@ -104,7 +102,7 @@ export const Either = {
   // Constructors
   left,
   right,
-  new: make,
+  new: fromNullable,
 
   // Guards
   isLeft,

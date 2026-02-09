@@ -1,5 +1,3 @@
-import { done, fail, type Result } from "./Result";
-
 export type None = { readonly $: "None" };
 export type Some<T> = { readonly $: "Some"; readonly value: T };
 export type Option<T> = None | Some<T>;
@@ -7,8 +5,6 @@ export type Option<T> = None | Some<T>;
 // Constructors
 export const none = <T>(): Option<T> => ({ $: "None" });
 export const some = <T>(value: T): Option<T> => ({ $: "Some", value });
-export const make = <T>(value: T): Option<T> =>
-  value == null ? { $: "None" } : { $: "Some", value };
 
 // Guards
 export const isSome = <T>(option: Option<T>): option is Some<T> =>
@@ -71,15 +67,11 @@ export const apply = <T, U>(
 export const orElse = <T>(opt: Option<T>, other: Option<T>): Option<T> =>
   opt.$ === "Some" ? opt : other;
 
-// Convert
-export const toResult = <T, E>(option: Option<T>, error: E): Result<T, E> =>
-  option.$ === "Some" ? done(option.value) : fail(error);
-
 // Backwards-compatible namespace-style object
 export const Option = {
   none,
   some,
-  new: make,
+  new: fromNullable,
   isSome,
   isNone,
   fromNullable,
@@ -96,7 +88,6 @@ export const Option = {
   zip,
   apply,
   orElse,
-  toResult,
 };
 
 declare global {

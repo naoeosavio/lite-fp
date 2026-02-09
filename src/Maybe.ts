@@ -25,6 +25,22 @@ export const fromNullable = <T>(v: T | null | undefined): Maybe<T> => v;
 export const toNullable = <T>(m: Maybe<T>): T | null => (m == null ? null : m);
 export const toUndefined = <T>(m: Maybe<T>): T | undefined =>
   m == null ? undefined : m;
+export const fromThrowable = <T>(fn: () => T): Maybe<T> => {
+  try {
+    return fn();
+  } catch {
+    return nothing();
+  }
+};
+export const fromPromise = <T>(promise: Promise<T>): Promise<Maybe<T>> =>
+  promise.then(
+    (v) => v,
+    () => nothing(),
+  );
+export const fromPredicate = <T>(
+  value: T,
+  predicate: (value: T) => boolean,
+): Maybe<T> => (predicate(value) ? just(value) : nothing());
 
 // Ops
 export const map = <T, U>(m: Maybe<T>, fn: (v: T) => U): Maybe<U> =>
@@ -49,20 +65,6 @@ export const getOrThrow = <T>(m: Maybe<T>, error: Error): T => {
   throw error;
 };
 
-// Conversions from effects
-export const fromThrowable = <T>(fn: () => T): Maybe<T> => {
-  try {
-    return fn();
-  } catch {
-    return nothing();
-  }
-};
-export const fromPromise = <T>(promise: Promise<T>): Promise<Maybe<T>> =>
-  promise.then(
-    (v) => v,
-    () => nothing(),
-  );
-
 // Combine
 export const zip = <T, U>(a: Maybe<T>, b: Maybe<U>): Maybe<[T, U]> =>
   a != null && b != null ? ([a, b] as [T, U]) : nothing();
@@ -76,6 +78,7 @@ export const orElse = <T>(opt: Maybe<T>, other: Maybe<T>): Maybe<T> =>
 export const Maybe = {
   just,
   nothing,
+  new: fromNullable,
   nothingNull,
   nothingUndefined,
   isSome,

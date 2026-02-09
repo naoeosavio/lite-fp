@@ -6,8 +6,6 @@ export type Result<T, E> = Done<T> | Fail<E>;
 // Constructors
 export const done = <T>(value: T): Done<T> => ({ value });
 export const fail = <E>(error: E): Fail<E> => ({ error });
-export const make = <T, E>(value: T, error: E): Result<T, E> =>
-  value == null ? fail(error) : done(value);
 
 // Type guards
 export const isDone = <T, E>(s: Result<T, E>): s is Done<T> => "value" in s;
@@ -114,7 +112,7 @@ export const tapErr = <T, E>(
 export const Result = {
   done,
   fail,
-  new: make,
+  new: fromNullable,
   isDone,
   isFail,
   fromNullable,
