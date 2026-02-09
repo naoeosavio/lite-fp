@@ -1,23 +1,23 @@
-// Maybe using null or undefined as None
-// By default, None covers both null and undefined for ergonomics.
+// Maybe using null or undefined as Nothing
+// By default, Nothing covers both null and undefined for ergonomics.
 
-export type NoneNull = null;
-export type NoneUndefined = undefined;
-export type None = NoneNull | NoneUndefined;
+export type NothingNull = null;
+export type NothingUndefined = undefined;
+export type Nothing = NothingNull | NothingUndefined;
 
-export type Maybe<T> = T | None;
+export type Maybe<T> = T | Nothing;
 
 // Constructors
 export const just = <T>(value: T): Maybe<T> => value;
-export const none = (): None => undefined;
-export const noneNull = (): NoneNull => null;
-export const noneUndefined = (): NoneUndefined => undefined;
+export const nothing = (): Nothing => undefined;
+export const nothingNull = (): NothingNull => null;
+export const nothingUndefined = (): NothingUndefined => undefined;
 
 // Guards
 export const isSome = <T>(m: Maybe<T>): m is T => m != null; // not null/undefined
-export const isNone = <T>(m: Maybe<T>): m is None => m == null; // null or undefined
-export const isNoneNull = <T>(m: Maybe<T>): m is NoneNull => m === null;
-export const isNoneUndefined = <T>(m: Maybe<T>): m is NoneUndefined => m === undefined;
+export const isNothing = <T>(m: Maybe<T>): m is Nothing => m == null; // null or undefined
+export const isNothingNull = <T>(m: Maybe<T>): m is NothingNull => m === null;
+export const isNothingUndefined = <T>(m: Maybe<T>): m is NothingUndefined => m === undefined;
 
 // Conversions
 export const fromNullable = <T>(v: T | null | undefined): Maybe<T> => v;
@@ -26,19 +26,19 @@ export const toUndefined = <T>(m: Maybe<T>): T | undefined => (m == null ? undef
 
 // Ops
 export const map = <T, U>(m: Maybe<T>, fn: (v: T) => U): Maybe<U> =>
-  m == null ? none() : fn(m);
+  m == null ? nothing() : fn(m);
 export const flatMap = <T, U>(m: Maybe<T>, fn: (v: T) => Maybe<U>): Maybe<U> =>
-  m == null ? none() : fn(m);
+  m == null ? nothing() : fn(m);
 export const filter = <T>(m: Maybe<T>, predicate: (value: T) => boolean): Maybe<T> =>
-  m != null && predicate(m) ? m : none();
+  m != null && predicate(m) ? m : nothing();
 export const match = <T, U>(
   m: Maybe<T>,
-  matcher: { some: (v: T) => U; none: () => U },
-): U => (m == null ? matcher.none() : matcher.some(m));
+  matcher: { some: (v: T) => U; nothing: () => U },
+): U => (m == null ? matcher.nothing() : matcher.some(m));
 
 // Extract
 export const getOrElse = <T>(m: Maybe<T>, d: T): T => (m == null ? d : m);
-export const getOrUndefined = <T>(m: Maybe<T>): T | undefined => (m == null ? noneUndefined() : m);
+export const getOrUndefined = <T>(m: Maybe<T>): T | undefined => (m == null ? nothingUndefined() : m);
 export const getOrThrow = <T>(m: Maybe<T>, error: Error): T => {
   if (m != null) return m;
   throw error;
@@ -49,31 +49,31 @@ export const fromThrowable = <T>(fn: () => T): Maybe<T> => {
   try {
     return fn();
   } catch {
-    return none();
+    return nothing();
   }
 };
 export const fromPromise = <T>(promise: Promise<T>): Promise<Maybe<T>> =>
-  promise.then(v => v, () => none());
+  promise.then(v => v, () => nothing());
 
 // Combine
 export const zip = <T, U>(a: Maybe<T>, b: Maybe<U>): Maybe<[T, U]> =>
-  a != null && b != null ? ([a, b] as [T, U]) : none();
+  a != null && b != null ? ([a, b] as [T, U]) : nothing();
 export const apply = <T, U>(
   fn: Maybe<(value: T) => U>,
   opt: Maybe<T>,
-): Maybe<U> => (fn != null && opt != null ? fn(opt) : none());
+): Maybe<U> => (fn != null && opt != null ? fn(opt) : nothing());
 export const orElse = <T>(opt: Maybe<T>, other: Maybe<T>): Maybe<T> =>
   opt != null ? opt : other;
 
 export const Maybe = {
   just,
-  none,
-  noneNull,
-  noneUndefined,
+  nothing,
+  nothingNull,
+  nothingUndefined,
   isSome,
-  isNone,
-  isNoneNull,
-  isNoneUndefined,
+  isNothing,
+  isNothingNull,
+  isNothingUndefined,
   fromNullable,
   toNullable,
   toUndefined,
