@@ -1,6 +1,6 @@
 // New simple aliases: Done<T> = T, Fail<E> = E, Result<T,E> = T | E
-export type Done<T> = {readonly value: T};
-export type Fail<E> = {readonly error: E};
+export type Done<T> = { readonly value: T };
+export type Fail<E> = { readonly error: E };
 export type Result<T, E> = Done<T> | Fail<E>;
 
 // Constructors
@@ -14,9 +14,14 @@ export const isDone = <T, E>(s: Result<T, E>): s is Done<T> => "value" in s;
 export const isFail = <T, E>(s: Result<T, E>): s is Fail<E> => "error" in s;
 
 // Conversions
-export const fromNullable = <T, E>(value: T | null | undefined, error: E): Result<T, E> =>
-  value == null ? fail(error) : done(value);
-export const fromThrowable = <T, E>(fn: () => T, onError: (e: unknown) => E): Result<T, E> => {
+export const fromNullable = <T, E>(
+  value: T | null | undefined,
+  error: E,
+): Result<T, E> => (value == null ? fail(error) : done(value));
+export const fromThrowable = <T, E>(
+  fn: () => T,
+  onError: (e: unknown) => E,
+): Result<T, E> => {
   try {
     return done(fn());
   } catch (e) {
@@ -31,8 +36,10 @@ export const fromPromise = <T, E>(
 // Ops
 export const map = <T, E, U>(s: Result<T, E>, fn: (a: T) => U): Result<U, E> =>
   isDone(s) ? done(fn(s.value)) : s;
-export const mapErr = <T, E, F>(s: Result<T, E>, fn: (b: E) => F): Result<T, F> =>
-  isFail(s) ? fail(fn(s.error)) : s;
+export const mapErr = <T, E, F>(
+  s: Result<T, E>,
+  fn: (b: E) => F,
+): Result<T, F> => (isFail(s) ? fail(fn(s.error)) : s);
 export const bimap = <T, E, U, F>(
   s: Result<T, E>,
   onDone: (a: T) => U,
@@ -58,16 +65,20 @@ export const recover = <T, E>(
 ): Result<T, E> => (isFail(s) ? done(fn(s.error)) : s);
 
 // Extract
-export const getOrElse = <T, E>(s: Result<T, E>, d: T): T => (isDone(s) ? s.value : d);
+export const getOrElse = <T, E>(s: Result<T, E>, d: T): T =>
+  isDone(s) ? s.value : d;
 export const getOrUndefined = <T, E>(s: Result<T, E>): T | undefined =>
-  (isDone(s) ? s.value : undefined);
+  isDone(s) ? s.value : undefined;
 export const getOrThrow = <T, E>(
   s: Result<T, E>,
   onError: (b: E) => never,
 ): T => (isDone(s) ? s.value : onError(s.error));
 
 // Combine
-export const zip = <T, U, E>(a: Result<T, E>, b: Result<U, E>): Result<[T, U], E> => {
+export const zip = <T, U, E>(
+  a: Result<T, E>,
+  b: Result<U, E>,
+): Result<[T, U], E> => {
   if (isFail(a)) return a;
   if (isFail(b)) return b;
   return done([a.value, b.value]);
@@ -92,7 +103,10 @@ export const tap = <T, E>(s: Result<T, E>, f: (a: T) => void): Result<T, E> => {
   if (isDone(s)) f(s.value);
   return s;
 };
-export const tapErr = <T, E>(s: Result<T, E>, f: (b: E) => void): Result<T, E> => {
+export const tapErr = <T, E>(
+  s: Result<T, E>,
+  f: (b: E) => void,
+): Result<T, E> => {
   if (isFail(s)) f(s.error);
   return s;
 };

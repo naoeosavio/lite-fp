@@ -17,20 +17,24 @@ export const nothingUndefined = (): NothingUndefined => undefined;
 export const isSome = <T>(m: Maybe<T>): m is T => m != null; // not null/undefined
 export const isNothing = <T>(m: Maybe<T>): m is Nothing => m == null; // null or undefined
 export const isNothingNull = <T>(m: Maybe<T>): m is NothingNull => m === null;
-export const isNothingUndefined = <T>(m: Maybe<T>): m is NothingUndefined => m === undefined;
+export const isNothingUndefined = <T>(m: Maybe<T>): m is NothingUndefined =>
+  m === undefined;
 
 // Conversions
 export const fromNullable = <T>(v: T | null | undefined): Maybe<T> => v;
 export const toNullable = <T>(m: Maybe<T>): T | null => (m == null ? null : m);
-export const toUndefined = <T>(m: Maybe<T>): T | undefined => (m == null ? undefined : m);
+export const toUndefined = <T>(m: Maybe<T>): T | undefined =>
+  m == null ? undefined : m;
 
 // Ops
 export const map = <T, U>(m: Maybe<T>, fn: (v: T) => U): Maybe<U> =>
   m == null ? nothing() : fn(m);
 export const flatMap = <T, U>(m: Maybe<T>, fn: (v: T) => Maybe<U>): Maybe<U> =>
   m == null ? nothing() : fn(m);
-export const filter = <T>(m: Maybe<T>, predicate: (value: T) => boolean): Maybe<T> =>
-  m != null && predicate(m) ? m : nothing();
+export const filter = <T>(
+  m: Maybe<T>,
+  predicate: (value: T) => boolean,
+): Maybe<T> => (m != null && predicate(m) ? m : nothing());
 export const match = <T, U>(
   m: Maybe<T>,
   matcher: { some: (v: T) => U; nothing: () => U },
@@ -38,7 +42,8 @@ export const match = <T, U>(
 
 // Extract
 export const getOrElse = <T>(m: Maybe<T>, d: T): T => (m == null ? d : m);
-export const getOrUndefined = <T>(m: Maybe<T>): T | undefined => (m == null ? nothingUndefined() : m);
+export const getOrUndefined = <T>(m: Maybe<T>): T | undefined =>
+  m == null ? nothingUndefined() : m;
 export const getOrThrow = <T>(m: Maybe<T>, error: Error): T => {
   if (m != null) return m;
   throw error;
@@ -53,7 +58,10 @@ export const fromThrowable = <T>(fn: () => T): Maybe<T> => {
   }
 };
 export const fromPromise = <T>(promise: Promise<T>): Promise<Maybe<T>> =>
-  promise.then(v => v, () => nothing());
+  promise.then(
+    (v) => v,
+    () => nothing(),
+  );
 
 // Combine
 export const zip = <T, U>(a: Maybe<T>, b: Maybe<U>): Maybe<[T, U]> =>
