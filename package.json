@@ -1,6 +1,6 @@
 {
   "name": "lite-fp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Functional programming utilities.",
   "license": "MIT",
   "main": "./dist/index.js",
@@ -17,16 +17,25 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/naoeosavio/lite-fp.git"
+    "url": "git+https://github.com/naoeosavio/lite-fp.git"
   },
   "author": "it is not savio",
   "keywords": [
-    
+    "functional-programming",
+    "fp",
+    "typescript",
+    "either",
+    "option",
+    "maybe",
+    "result",
+    "adt",
+    "algebraic-data-types",
+    "utilities"
   ],
   "scripts": {
-    "build": "tsup",
     "dev": "tsup --watch",
     "lint": "tsc",
+    "build": "tsup",
     "format": "biome check --write src",
     "check": "biome check src",
     "ci": "npm run lint && npm run check && npm run build",
@@ -34,7 +43,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.6",
-    "tsup": "8.0.1",
+    "tsup": "8.5.1",
     "typescript": "^5.4.5"
   }
 }
