@@ -26,9 +26,11 @@ export const toUndefined = <T>(m: Maybe<T>): T | undefined => (m == null ? undef
 
 // Ops
 export const map = <T, U>(m: Maybe<T>, fn: (v: T) => U): Maybe<U> =>
-  m == null ? undefined : fn(m);
+  m == null ? none() : fn(m);
 export const flatMap = <T, U>(m: Maybe<T>, fn: (v: T) => Maybe<U>): Maybe<U> =>
-  m == null ? undefined : fn(m);
+  m == null ? none() : fn(m);
+export const filter = <T>(m: Maybe<T>, predicate: (value: T) => boolean): Maybe<T> =>
+  m != null && predicate(m) ? m : none();
 export const match = <T, U>(
   m: Maybe<T>,
   matcher: { some: (v: T) => U; none: () => U },
@@ -36,6 +38,32 @@ export const match = <T, U>(
 
 // Extract
 export const getOrElse = <T>(m: Maybe<T>, d: T): T => (m == null ? d : m);
+export const getOrUndefined = <T>(m: Maybe<T>): T | undefined => (m == null ? noneUndefined() : m);
+export const getOrThrow = <T>(m: Maybe<T>, error: Error): T => {
+  if (m != null) return m;
+  throw error;
+};
+
+// Conversions from effects
+export const fromThrowable = <T>(fn: () => T): Maybe<T> => {
+  try {
+    return fn();
+  } catch {
+    return none();
+  }
+};
+export const fromPromise = <T>(promise: Promise<T>): Promise<Maybe<T>> =>
+  promise.then(v => v, () => none());
+
+// Combine
+export const zip = <T, U>(a: Maybe<T>, b: Maybe<U>): Maybe<[T, U]> =>
+  a != null && b != null ? ([a, b] as [T, U]) : none();
+export const apply = <T, U>(
+  fn: Maybe<(value: T) => U>,
+  opt: Maybe<T>,
+): Maybe<U> => (fn != null && opt != null ? fn(opt) : none());
+export const orElse = <T>(opt: Maybe<T>, other: Maybe<T>): Maybe<T> =>
+  opt != null ? opt : other;
 
 export const Maybe = {
   just,
@@ -51,6 +79,14 @@ export const Maybe = {
   toUndefined,
   map,
   flatMap,
+  filter,
   match,
   getOrElse,
+  getOrUndefined,
+  getOrThrow,
+  fromThrowable,
+  fromPromise,
+  zip,
+  apply,
+  orElse,
 };
