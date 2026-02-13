@@ -4,6 +4,7 @@ export type Pair<A, B> = readonly [A, B];
 export const fst = <A, B>(p: Pair<A, B>): A => p[0];
 export const snd = <A, B>(p: Pair<A, B>): B => p[1];
 export const make = <A, B>(a: A, b: B): Pair<A, B> => [a, b];
+export const pair = make;
 
 export const fromArray = <A, B>([a, b]: [A, B]): Pair<A, B> => [a, b];
 export const fromObject = <A, B>(obj: { fst: A; snd: B }): Pair<A, B> => [
@@ -78,5 +79,3 @@ export const Pair = {
   equals,
   zip,
 };
-
-export const pair = make;

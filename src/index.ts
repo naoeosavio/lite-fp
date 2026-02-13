@@ -1,14 +1,34 @@
 // Either
 export type { Left, Right } from "./Either";
-export { Either, left, right } from "./Either";
+export {
+  Either,
+  getLeft,
+  getRight,
+  isLeft,
+  isRight,
+  left,
+  right,
+} from "./Either";
 // Maybe
 export type { Nothing, NothingNull, NothingUndefined } from "./Maybe";
-export { just, Maybe, nothing } from "./Maybe";
+export { isJust, isNothing, just, Maybe, nothing } from "./Maybe";
 // Option
 export type { None, Some } from "./Option";
-export { none, Option, some } from "./Option";
+export { isNone, isSome, none, Option, some, unwrap } from "./Option";
 // Pair
-export { Pair, pair } from "./Pair";
+export { fst, Pair, pair, snd } from "./Pair";
 // Result
 export type { Done, Fail } from "./Result";
-export { done, fail, Result } from "./Result";
+export {
+  done,
+  Err,
+  err,
+  fail,
+  isDone,
+  isErr,
+  isFail,
+  isOk,
+  Ok,
+  Result,
+  val,
+} from "./Result";
