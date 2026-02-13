@@ -9,13 +9,11 @@ export const fail = <E>(e: E): Fail<E> => ({ e });
 export const Ok = done;
 export const Err = fail;
 
-
 // Type guards
 export const isDone = <T, E>(r: Result<T, E>): r is Done<T> => "v" in r;
 export const isFail = <T, E>(r: Result<T, E>): r is Fail<E> => "e" in r;
 export const isOk = isDone;
 export const isErr = isFail;
-
 
 // Conversions
 export const fromNullable = <T, E>(
@@ -75,14 +73,10 @@ export const getOrElse = <T, E>(r: Result<T, E>, d: T): T =>
   isDone(r) ? val(r) : d;
 export const getOrUndefined = <T, E>(r: Result<T, E>): T | undefined =>
   isDone(r) ? val(r) : undefined;
-export const getOrThrow = <T, E>(
-  r: Result<T, E>,
-  onError: (b: E) => never,
-): T => (isDone(r) ? val(r) : onError(err(r)));
-export const unwrap = <T, E>(r: Result<T, E>): T => {
+export const getOrThrow = <T, E>(r: Result<T, E>): T => {
   if (isDone(r)) return val(r);
   throw err(r);
-}
+};
 // Combine
 export const zip = <T, U, E>(
   a: Result<T, E>,
@@ -90,7 +84,7 @@ export const zip = <T, U, E>(
 ): Result<[T, U], E> => {
   if (isFail(a)) return a;
   if (isFail(b)) return b;
-  return done([a.v, b.v]);
+  return done([val(a), val(b)]);
 };
 
 export const apply = <T, U, E>(
@@ -99,7 +93,7 @@ export const apply = <T, U, E>(
 ): Result<U, E> => {
   if (isFail(fn)) return fn;
   if (isFail(arg)) return arg;
-  return done(fn.v(arg.v));
+  return done(val(fn)(val(arg)));
 };
 export const orElse = <T, E>(a: Result<T, E>, b: Result<T, E>): Result<T, E> =>
   isDone(a) ? a : b;
@@ -143,6 +137,7 @@ export const Result = {
   fold,
   recover,
   getOrElse,
+  getOrUndefined,
   getOrThrow,
   zip,
   apply,

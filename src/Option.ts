@@ -47,13 +47,14 @@ export const match = <T, U>(
 ): U => (option.$ === "Some" ? matcher.some(option.value) : matcher.none());
 
 // Extract
+export const unwrap = <T>(option: Some<T>): T => option.value;
 export const getOrElse = <T>(option: Option<T>, defaultValue: T): T =>
   option.$ === "Some" ? option.value : defaultValue;
 export const getOrUndefined = <T>(option: Option<T>): T | undefined =>
   option.$ === "Some" ? option.value : undefined;
-export const getOrThrow = <T>(option: Option<T>, error: Error): T => {
+export const getOrThrow = <T>(option: Option<T>): T => {
   if (option.$ === "Some") return option.value;
-  throw error;
+  throw new Error("Option is none");
 };
 
 // Combine
@@ -82,6 +83,7 @@ export const Option = {
   flatMap,
   filter,
   match,
+  unwrap,
   getOrElse,
   getOrUndefined,
   getOrThrow,
