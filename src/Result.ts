@@ -4,12 +4,18 @@ export type Fail<E> = { readonly e: E };
 export type Result<T, E> = Done<T> | Fail<E>;
 
 // Constructors
-export const done = <T>(value: T): Done<T> => ({ v: value });
-export const fail = <E>(error: E): Fail<E> => ({ e: error });
+export const done = <T>(v: T): Done<T> => ({ v });
+export const fail = <E>(e: E): Fail<E> => ({ e });
+export const Ok = done;
+export const Err = fail;
+
 
 // Type guards
-export const isDone = <T, E>(r: Result<T, E>): r is Done<T> => "value" in r;
-export const isFail = <T, E>(r: Result<T, E>): r is Fail<E> => "error" in r;
+export const isDone = <T, E>(r: Result<T, E>): r is Done<T> => "v" in r;
+export const isFail = <T, E>(r: Result<T, E>): r is Fail<E> => "e" in r;
+export const isOk = isDone;
+export const isErr = isFail;
+
 
 // Conversions
 export const fromNullable = <T, E>(
@@ -33,45 +39,50 @@ export const fromPromise = <T, E>(
 
 // Ops
 export const map = <T, E, U>(r: Result<T, E>, fn: (a: T) => U): Result<U, E> =>
-  isDone(r) ? done(fn(r.v)) : r;
+  isDone(r) ? done(fn(val(r))) : r;
 export const mapErr = <T, E, F>(
   r: Result<T, E>,
   fn: (b: E) => F,
-): Result<T, F> => (isFail(r) ? fail(fn(r.e)) : r);
+): Result<T, F> => (isFail(r) ? fail(fn(err(r))) : r);
 export const bimap = <T, E, U, F>(
   r: Result<T, E>,
   onDone: (a: T) => U,
   onFail: (b: E) => F,
-): Result<U, F> => (isDone(r) ? done(onDone(r.v)) : fail(onFail(r.e)));
+): Result<U, F> => (isDone(r) ? done(onDone(val(r))) : fail(onFail(err(r))));
 export const flatMap = <T, E, C>(
   r: Result<T, E>,
   fn: (a: T) => Result<C, E>,
-): Result<C, E> => (isDone(r) ? fn(r.v) : r);
+): Result<C, E> => (isDone(r) ? fn(val(r)) : r);
 export const match = <T, E, U>(
   r: Result<T, E>,
   matcher: { done: (a: T) => U; fail: (b: E) => U },
-): U => (isDone(r) ? matcher.done(r.v) : matcher.fail(r.e));
+): U => (isDone(r) ? matcher.done(val(r)) : matcher.fail(err(r)));
 export const fold = <T, E, U>(
   r: Result<T, E>,
   onFail: (error: E) => U,
   onDone: (value: T) => U,
-): U => (isDone(r) ? onDone(r.v) : onFail(r.e));
+): U => (isDone(r) ? onDone(val(r)) : onFail(err(r)));
 
 export const recover = <T, E>(
   r: Result<T, E>,
   fn: (error: E) => T,
-): Result<T, E> => (isFail(r) ? done(fn(r.e)) : r);
+): Result<T, E> => (isFail(r) ? done(fn(err(r))) : r);
 
 // Extract
+export const val = <T>(r: Done<T>): T => r.v;
+export const err = <E>(r: Fail<E>): E => r.e;
 export const getOrElse = <T, E>(r: Result<T, E>, d: T): T =>
-  isDone(r) ? r.v : d;
+  isDone(r) ? val(r) : d;
 export const getOrUndefined = <T, E>(r: Result<T, E>): T | undefined =>
-  isDone(r) ? r.v : undefined;
+  isDone(r) ? val(r) : undefined;
 export const getOrThrow = <T, E>(
   r: Result<T, E>,
   onError: (b: E) => never,
-): T => (isDone(r) ? r.v : onError(r.e));
-
+): T => (isDone(r) ? val(r) : onError(err(r)));
+export const unwrap = <T, E>(r: Result<T, E>): T => {
+  if (isDone(r)) return val(r);
+  throw err(r);
+}
 // Combine
 export const zip = <T, U, E>(
   a: Result<T, E>,
@@ -96,29 +107,31 @@ export const filter = <T, E>(
   r: Result<T, E>,
   predicate: (a: T) => boolean,
   onFalse: E,
-): Result<T, E> => (isDone(r) ? (predicate(r.v) ? r : fail(onFalse)) : r);
+): Result<T, E> => (isDone(r) ? (predicate(val(r)) ? r : fail(onFalse)) : r);
 export const tap = <T, E>(r: Result<T, E>, f: (a: T) => void): Result<T, E> => {
-  if (isDone(r)) f(r.v);
+  if (isDone(r)) f(val(r));
   return r;
 };
 export const tapErr = <T, E>(
   r: Result<T, E>,
   f: (b: E) => void,
 ): Result<T, E> => {
-  if (isFail(r)) f(r.e);
+  if (isFail(r)) f(err(r));
   return r;
 };
 
 export const Result = {
   done,
   fail,
-  OK: done,
-  Err: fail,
+  Ok,
+  Err,
+  val,
+  err,
   new: fromNullable,
   isDone,
   isFail,
-  isOk: isDone,
-  isErr: isFail,
+  isOk,
+  isErr,
   fromNullable,
   fromThrowable,
   fromPromise,
