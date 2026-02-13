@@ -31,42 +31,41 @@ export const fromPromise = <T>(promise: Promise<T>): Promise<Option<T>> =>
 
 // Ops
 export const map = <T, U>(option: Option<T>, fn: (value: T) => U): Option<U> =>
-  option.$ === "Some" ? some(fn(option.value)) : none();
+  isSome(option) ? some(fn(unwrap(option))) : none();
 export const flatMap = <T, U>(
   option: Option<T>,
   fn: (value: T) => Option<U>,
-): Option<U> => (option.$ === "Some" ? fn(option.value) : none());
+): Option<U> => (isSome(option) ? fn(unwrap(option)) : none());
 export const filter = <T>(
   option: Option<T>,
   predicate: (value: T) => boolean,
-): Option<T> =>
-  option.$ === "Some" && predicate(option.value) ? option : none();
+): Option<T> => (isSome(option) && predicate(unwrap(option)) ? option : none());
 export const match = <T, U>(
   option: Option<T>,
   matcher: { some: (value: T) => U; none: () => U },
-): U => (option.$ === "Some" ? matcher.some(option.value) : matcher.none());
+): U => (isSome(option) ? matcher.some(unwrap(option)) : matcher.none());
 
 // Extract
-export const get = <T>(option: Some<T>): T => option.value;
+export const unwrap = <T>(option: Some<T>): T => option.value;
 export const getOrElse = <T>(option: Option<T>, defaultValue: T): T =>
-  option.$ === "Some" ? option.value : defaultValue;
+  isSome(option) ? unwrap(option) : defaultValue;
 export const getOrUndefined = <T>(option: Option<T>): T | undefined =>
-  option.$ === "Some" ? option.value : undefined;
+  isSome(option) ? unwrap(option) : undefined;
 export const getOrThrow = <T>(option: Option<T>): T => {
-  if (option.$ === "Some") return option.value;
+  if (isSome(option)) return unwrap(option);
   throw new Error("Option is none");
 };
 
 // Combine
 export const zip = <T, U>(a: Option<T>, b: Option<U>): Option<[T, U]> =>
-  a.$ === "Some" && b.$ === "Some" ? some([a.value, b.value]) : none();
+  isSome(a) && isSome(b) ? some([unwrap(a), unwrap(b)]) : none();
 export const apply = <T, U>(
   fn: Option<(value: T) => U>,
   opt: Option<T>,
 ): Option<U> =>
-  fn.$ === "Some" && opt.$ === "Some" ? some(fn.value(opt.value)) : none();
+  isSome(fn) && isSome(opt) ? some(unwrap(fn)(unwrap(opt))) : none();
 export const orElse = <T>(opt: Option<T>, other: Option<T>): Option<T> =>
-  opt.$ === "Some" ? opt : other;
+  isSome(opt) ? opt : other;
 
 // Backwards-compatible namespace-style object
 export const Option = {
@@ -83,7 +82,7 @@ export const Option = {
   flatMap,
   filter,
   match,
-  get,
+  unwrap,
   getOrElse,
   getOrUndefined,
   getOrThrow,
