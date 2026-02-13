@@ -56,12 +56,17 @@ export const match = <T, U>(
   m: Maybe<T>,
   matcher: { some: (v: T) => U; nothing: () => U },
 ): U => (isNothing(m) ? matcher.nothing() : matcher.some(m));
+export const fold = <T, U>(
+  m: Maybe<T>,
+  onNothing: () => U,
+  onJust: (v: T) => U,
+): U => (isNothing(m) ? onNothing() : onJust(m));
 
 // Extract
-export const unwrap = <T>(m: NonNullable<T>): T => m;
+export const unwrap = <T>(m: Extract<Maybe<T>, T>): T => m;
 export const getOrElse = <T>(m: Maybe<T>, d: T): T => (isNothing(m) ? d : m);
 export const getOrUndefined = <T>(m: Maybe<T>): T | undefined =>
-  m == null ? nothingUndefined() : unwrap(m);
+  isNothing(m) ? nothingUndefined() : m;
 export const getOrThrow = <T>(m: Maybe<T>): T => {
   if (isNothing(m)) throw new Error("Maybe is nothing");
   else return m;
@@ -96,6 +101,7 @@ export const Maybe = {
   flatMap,
   filter,
   match,
+  fold,
   unwrap,
   getOrElse,
   getOrUndefined,

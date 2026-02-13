@@ -47,7 +47,7 @@ export const match = <T, U>(
 ): U => (option.$ === "Some" ? matcher.some(option.value) : matcher.none());
 
 // Extract
-export const unwrap = <T>(option: Some<T>): T => option.value;
+export const get = <T>(option: Some<T>): T => option.value;
 export const getOrElse = <T>(option: Option<T>, defaultValue: T): T =>
   option.$ === "Some" ? option.value : defaultValue;
 export const getOrUndefined = <T>(option: Option<T>): T | undefined =>
@@ -83,7 +83,7 @@ export const Option = {
   flatMap,
   filter,
   match,
-  unwrap,
+  get,
   getOrElse,
   getOrUndefined,
   getOrThrow,
