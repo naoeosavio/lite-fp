@@ -63,7 +63,6 @@ export const fold = <T, U>(
 ): U => (isNothing(m) ? onNothing() : onJust(m));
 
 // Extract
-export const unwrap = <T>(m: Extract<Maybe<T>, T>): T => m;
 export const getOrElse = <T>(m: Maybe<T>, d: T): T => (isNothing(m) ? d : m);
 export const getOrUndefined = <T>(m: Maybe<T>): T | undefined =>
   isNothing(m) ? nothingUndefined() : m;
@@ -102,7 +101,6 @@ export const Maybe = {
   filter,
   match,
   fold,
-  unwrap,
   getOrElse,
   getOrUndefined,
   getOrThrow,
