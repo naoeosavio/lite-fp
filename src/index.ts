@@ -2,15 +2,15 @@
 export type { Left, Right } from "./Either";
 export {
   Either,
-  getLeft,
-  getRight,
   isLeft,
   isRight,
   left,
+  lft,
+  rgt,
   right,
 } from "./Either";
 // Maybe
-export type { Nothing, NothingNull, NothingUndefined } from "./Maybe";
+export type { Nothing } from "./Maybe";
 export { isJust, isNothing, just, Maybe, nothing } from "./Maybe";
 // Option
 export type { None, Some } from "./Option";

@@ -26,11 +26,14 @@ export const fromThrowable = <T>(fn: () => T): Maybe<T> => {
   }
 };
 export const fromPromise = <T>(promise: Promise<T>): Promise<Maybe<T>> =>
-  promise.then(just, () => nothing());
+  promise.then(
+    just,
+    () => nothing(),
+  );
 export const fromPredicate = <T>(
   value: T,
   predicate: (value: T) => boolean,
-): Maybe<T> => (predicate(value) ? just(value) : nothing());
+): Maybe<T> => (predicate(value) ? value : nothing());
 
 // Ops
 export const map = <T, U>(m: Maybe<T>, fn: (v: T) => U): Maybe<U> =>
