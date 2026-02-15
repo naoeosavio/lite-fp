@@ -1,5 +1,10 @@
-export type None = { readonly $: "None" };
-export type Some<T> = { readonly $: "Some"; readonly value: T };
+export interface None {
+  readonly $: "None";
+}
+export interface Some<T> {
+  readonly $: "Some";
+  readonly value: T;
+}
 export type Option<T> = None | Some<T>;
 
 // Constructors
@@ -40,6 +45,11 @@ export const filter = <T>(
   option: Option<T>,
   predicate: (value: T) => boolean,
 ): Option<T> => (isSome(option) && predicate(unwrap(option)) ? option : none());
+export const fold = <T, U>(
+  option: Option<T>,
+  onNone: () => U,
+  onSome: (value: T) => U,
+): U => (isSome(option) ? onSome(unwrap(option)) : onNone());
 export const match = <T, U>(
   option: Option<T>,
   matcher: { some: (value: T) => U; none: () => U },
@@ -51,6 +61,8 @@ export const getOrElse = <T>(option: Option<T>, defaultValue: T): T =>
   isSome(option) ? unwrap(option) : defaultValue;
 export const getOrUndefined = <T>(option: Option<T>): T | undefined =>
   isSome(option) ? unwrap(option) : undefined;
+export const getOrNull = <T>(option: Option<T>): T | null =>
+  isSome(option) ? unwrap(option) : null;
 export const getOrThrow = <T>(option: Option<T>): T => {
   if (isSome(option)) return unwrap(option);
   throw new Error("Option is none");
@@ -66,29 +78,47 @@ export const apply = <T, U>(
   isSome(fn) && isSome(opt) ? some(unwrap(fn)(unwrap(opt))) : none();
 export const orElse = <T>(opt: Option<T>, other: Option<T>): Option<T> =>
   isSome(opt) ? opt : other;
+export const tap = <T>(option: Option<T>, f: (value: T) => void): Option<T> => {
+  if (isSome(option)) f(unwrap(option));
+  return option;
+};
 
 // Backwards-compatible namespace-style object
 export const Option = {
+  // Constructors
+  new: fromNullable,
   none,
   some,
-  new: fromNullable,
+
+  // Guards
   isSome,
   isNone,
+
+  // Conversions
   fromNullable,
   fromPredicate,
   fromThrowable,
   fromPromise,
+
+  // Ops
   map,
   flatMap,
   filter,
+  fold,
   match,
+
+  // Extract
   unwrap,
   getOrElse,
   getOrUndefined,
+  getOrNull,
   getOrThrow,
+
+  // Combine
   zip,
   apply,
   orElse,
+  tap,
 };
 
 declare global {
