@@ -1,6 +1,10 @@
 // New simple aliases: Done<T> = T, Fail<E> = E, Result<T,E> = T | E
-export type Done<T> = { readonly v: T };
-export type Fail<E> = { readonly e: E };
+export interface Done<T> {
+  readonly v: T;
+}
+export interface Fail<E> {
+  readonly e: E;
+}
 export type Result<T, E> = Done<T> | Fail<E>;
 
 // Constructors
@@ -60,7 +64,15 @@ export const fold = <T, E, U>(
   onFail: (error: E) => U,
   onDone: (value: T) => U,
 ): U => (isDone(r) ? onDone(val(r)) : onFail(err(r)));
-
+export const chain = <T, E, C>(
+  r: Result<T, E>,
+  fn: (a: T) => Result<C, E>,
+): Result<C, E> => (isDone(r) ? fn(val(r)) : r);
+export const filter = <T, E>(
+  r: Result<T, E>,
+  predicate: (a: T) => boolean,
+  onFalse: E,
+): Result<T, E> => (isDone(r) ? (predicate(val(r)) ? r : fail(onFalse)) : r);
 export const recover = <T, E>(
   r: Result<T, E>,
   fn: (error: E) => T,
@@ -69,10 +81,12 @@ export const recover = <T, E>(
 // Extract
 export const val = <T>(r: Done<T>): T => r.v;
 export const err = <E>(r: Fail<E>): E => r.e;
-export const getOrElse = <T, E>(r: Result<T, E>, d: T): T =>
-  isDone(r) ? val(r) : d;
+export const getOrElse = <T, E>(r: Result<T, E>, defaultValue: T): T =>
+  isDone(r) ? val(r) : defaultValue;
 export const getOrUndefined = <T, E>(r: Result<T, E>): T | undefined =>
   isDone(r) ? val(r) : undefined;
+export const getOrNull = <T, E>(r: Result<T, E>): T | null =>
+  isDone(r) ? val(r) : null;
 export const getOrThrow = <T, E>(r: Result<T, E>): T => {
   if (isDone(r)) return val(r);
   throw err(r);
@@ -97,11 +111,6 @@ export const apply = <T, U, E>(
 };
 export const orElse = <T, E>(a: Result<T, E>, b: Result<T, E>): Result<T, E> =>
   isDone(a) ? a : b;
-export const filter = <T, E>(
-  r: Result<T, E>,
-  predicate: (a: T) => boolean,
-  onFalse: E,
-): Result<T, E> => (isDone(r) ? (predicate(val(r)) ? r : fail(onFalse)) : r);
 export const tap = <T, E>(r: Result<T, E>, f: (a: T) => void): Result<T, E> => {
   if (isDone(r)) f(val(r));
   return r;
@@ -115,34 +124,45 @@ export const tapErr = <T, E>(
 };
 
 export const Result = {
+  // Constructors
+  new: fromNullable,
   done,
   fail,
-  Ok,
-  Err,
-  val,
-  err,
-  new: fromNullable,
+
+  // Guards
   isDone,
   isFail,
   isOk,
   isErr,
+
+  // Conversions
   fromNullable,
   fromThrowable,
   fromPromise,
+
+  // Ops
   map,
   mapErr,
   bimap,
   flatMap,
+  filter,
   match,
   fold,
+  chain,
   recover,
+
+  // Extract
+  val,
+  err,
   getOrElse,
   getOrUndefined,
+  getOrNull,
   getOrThrow,
+
+  // Combine
   zip,
   apply,
   orElse,
-  filter,
   tap,
   tapErr,
 };
