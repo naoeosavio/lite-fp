@@ -26,10 +26,7 @@ export const fromThrowable = <T>(fn: () => T): Maybe<T> => {
   }
 };
 export const fromPromise = <T>(promise: Promise<T>): Promise<Maybe<T>> =>
-  promise.then(
-    just,
-    () => nothing(),
-  );
+  promise.then(just, () => nothing());
 export const fromPredicate = <T>(
   value: T,
   predicate: (value: T) => boolean,
