@@ -48,7 +48,7 @@ export const bimap = <A, B, C, D>(
   e: Either<A, B>,
   fl: (l: A) => C,
   fr: (r: B) => D,
-): Either<C, D> => (isRight(e) ? right(fr(rgt(e))) :  left(fl(lft(e))));
+): Either<C, D> => (isRight(e) ? right(fr(rgt(e))) : left(fl(lft(e))));
 export const flatMap = <A, B, C>(
   e: Either<A, B>,
   fn: (value: B) => Either<A, C>,
@@ -62,7 +62,7 @@ export const fold = <A, B, C>(
   e: Either<A, B>,
   onLeft: (l: A) => C,
   onRight: (r: B) => C,
-): C => (isRight(e) ? onRight(rgt(e)) : onLeft(lft(e)) );
+): C => (isRight(e) ? onRight(rgt(e)) : onLeft(lft(e)));
 export const match = <A, B, C>(
   e: Either<A, B>,
   matcher: { right: (value: B) => C; left: (value: A) => C },
@@ -85,7 +85,8 @@ export const getOrUndefined = <A, B>(e: Either<A, B>): B | undefined =>
   isRight(e) ? rgt(e) : undefined;
 export const getOrThrow = <A, B>(e: Either<A, B>): B => {
   if (isRight(e)) return rgt(e);
-  throw lft(e);
+  const value = lft(e);
+  throw value instanceof Error ? value : new Error(String(value));
 };
 
 // Combine
@@ -143,7 +144,7 @@ export const Either = {
   bimap,
   flatMap,
   filter,
-  chain:flatMap,
+  chain: flatMap,
   fold,
   match,
   swap,
@@ -170,9 +171,15 @@ declare global {
   }
 }
 
-Promise.prototype.toEither = function <T, L = unknown>(
-  this: Promise<T>,
-  onError: (e: unknown) => L,
-): Promise<Either<L, T>> {
-  return fromPromise(this, onError);
-};
+if (!("toEither" in Promise.prototype)) {
+  Object.defineProperty(Promise.prototype, "toEither", {
+    value: function <T, L = unknown>(
+      this: Promise<T>,
+      onError: (e: unknown) => L,
+    ): Promise<Either<L, T>> {
+      return fromPromise(this, onError);
+    },
+    writable: true,
+    configurable: true,
+  });
+}

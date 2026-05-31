@@ -91,7 +91,8 @@ export const getOrNull = <T, E>(r: Result<T, E>): T | null =>
   isDone(r) ? val(r) : null;
 export const getOrThrow = <T, E>(r: Result<T, E>): T => {
   if (isDone(r)) return val(r);
-  throw err(r);
+  const value = err(r);
+  throw value instanceof Error ? value : new Error(String(value));
 };
 // Combine
 export const zip = <T, U, E>(
@@ -145,13 +146,13 @@ export const Result = {
   // Ops
   map,
   mapFail,
-  mapErr:mapFail,
+  mapErr: mapFail,
   bimap,
   flatMap,
   filter,
   match,
   fold,
-  chain:flatMap,
+  chain: flatMap,
   recover,
 
   // Extract
@@ -168,7 +169,7 @@ export const Result = {
   orElse,
   tap,
   tapFail,
-  tapErr:tapFail,
+  tapErr: tapFail,
 };
 
 declare global {
@@ -177,9 +178,15 @@ declare global {
   }
 }
 
-Promise.prototype.toResult = function <T, E = unknown>(
-  this: Promise<T>,
-  onError: (e: unknown) => E,
-): Promise<Result<T, E>> {
-  return fromPromise(this, onError);
-};
+if (!("toResult" in Promise.prototype)) {
+  Object.defineProperty(Promise.prototype, "toResult", {
+    value: function <T, E = unknown>(
+      this: Promise<T>,
+      onError: (e: unknown) => E,
+    ): Promise<Result<T, E>> {
+      return fromPromise(this, onError);
+    },
+    writable: true,
+    configurable: true,
+  });
+}

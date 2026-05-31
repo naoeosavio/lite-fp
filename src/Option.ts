@@ -130,12 +130,22 @@ declare global {
   }
 }
 
-Array.prototype.firstOption = function <T>(this: T[]): Option<T> {
-  return this[0] ? some(this[0]) : none();
-};
+if (!("firstOption" in Array.prototype)) {
+  Object.defineProperty(Array.prototype, "firstOption", {
+    value: function <T>(this: T[]): Option<T> {
+      return this[0] ? some(this[0]) : none();
+    },
+    writable: true,
+    configurable: true,
+  });
+}
 
-Promise.prototype.toOption = function <T>(
-  this: Promise<T>,
-): Promise<Option<T>> {
-  return fromPromise(this);
-};
+if (!("toOption" in Promise.prototype)) {
+  Object.defineProperty(Promise.prototype, "toOption", {
+    value: function <T>(this: Promise<T>): Promise<Option<T>> {
+      return fromPromise(this);
+    },
+    writable: true,
+    configurable: true,
+  });
+}

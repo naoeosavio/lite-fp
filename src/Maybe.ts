@@ -17,7 +17,12 @@ export const isNull = <T>(m: Maybe<T>): m is null => m === null;
 export const isUndefined = <T>(m: Maybe<T>): m is undefined => m === undefined;
 
 // Conversions
-export const fromNullable = <T>(m: T | null | undefined): Maybe<T> => m;
+export const fromNullable = <T>(m: T | null | undefined): Maybe<T> =>
+  m == null ? nothing() : just(m);
+export const fromPredicate = <T>(
+  value: T,
+  predicate: (value: T) => boolean,
+): Maybe<T> => (predicate(value) ? value : nothing());
 export const fromThrowable = <T>(fn: () => T): Maybe<T> => {
   try {
     return fn();
@@ -27,10 +32,6 @@ export const fromThrowable = <T>(fn: () => T): Maybe<T> => {
 };
 export const fromPromise = <T>(promise: Promise<T>): Promise<Maybe<T>> =>
   promise.then(just, () => nothing());
-export const fromPredicate = <T>(
-  value: T,
-  predicate: (value: T) => boolean,
-): Maybe<T> => (predicate(value) ? value : nothing());
 
 // Ops
 export const map = <T, U>(m: Maybe<T>, fn: (v: T) => U): Maybe<U> =>
@@ -41,15 +42,15 @@ export const filter = <T>(
   m: Maybe<T>,
   predicate: (value: T) => boolean,
 ): Maybe<T> => (isJust(m) && predicate(m) ? m : nothing());
-export const match = <T, U>(
-  m: Maybe<T>,
-  matcher: { some: (v: T) => U; nothing: () => U },
-): U => (isNothing(m) ? matcher.nothing() : matcher.some(m));
 export const fold = <T, U>(
   m: Maybe<T>,
   onNothing: () => U,
   onJust: (v: T) => U,
 ): U => (isNothing(m) ? onNothing() : onJust(m));
+export const match = <T, U>(
+  m: Maybe<T>,
+  matcher: { some: (v: T) => U; nothing: () => U },
+): U => (isNothing(m) ? matcher.nothing() : matcher.some(m));
 
 // Extract
 export const getOrElse = <T>(m: Maybe<T>, defaultValue: T): T =>
@@ -101,8 +102,8 @@ export const Maybe = {
   map,
   flatMap,
   filter,
-  match,
   fold,
+  match,
 
   // Extract
   getOrElse,
