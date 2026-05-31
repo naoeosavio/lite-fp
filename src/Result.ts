@@ -1,21 +1,22 @@
-// New simple aliases: Done<T> = T, Fail<E> = E, Result<T,E> = T | E
 export interface Done<T> {
-  readonly v: T;
+  readonly $: "Done";
+  readonly value: T;
 }
 export interface Fail<E> {
-  readonly e: E;
+  readonly $: "Fail";
+  readonly value: E;
 }
 export type Result<T, E> = Done<T> | Fail<E>;
 
 // Constructors
-export const done = <T>(v: T): Done<T> => ({ v });
-export const fail = <E>(e: E): Fail<E> => ({ e });
+export const done = <T>(value: T): Done<T> => ({ $: "Done", value });
+export const fail = <E>(value: E): Fail<E> => ({ $: "Fail", value });
 export const Ok = done;
 export const Err = fail;
 
 // Type guards
-export const isDone = <T, E>(r: Result<T, E>): r is Done<T> => "v" in r;
-export const isFail = <T, E>(r: Result<T, E>): r is Fail<E> => "e" in r;
+export const isDone = <T, E>(r: Result<T, E>): r is Done<T> => r.$ === "Done";
+export const isFail = <T, E>(r: Result<T, E>): r is Fail<E> => r.$ === "Fail";
 export const isOk = isDone;
 export const isErr = isFail;
 
@@ -39,10 +40,13 @@ export const fromPromise = <T, E>(
   onError: (e: unknown) => E,
 ): Promise<Result<T, E>> => promise.then(done, (e) => fail(onError(e)));
 
+export const toPromise = <T, E>(r: Result<T, E>): Promise<T> =>
+  isDone(r) ? Promise.resolve(val(r)) : Promise.reject(err(r));
+
 // Ops
 export const map = <T, E, U>(r: Result<T, E>, fn: (a: T) => U): Result<U, E> =>
   isDone(r) ? done(fn(val(r))) : r;
-export const mapErr = <T, E, F>(
+export const mapFail = <T, E, F>(
   r: Result<T, E>,
   fn: (b: E) => F,
 ): Result<T, F> => (isFail(r) ? fail(fn(err(r))) : r);
@@ -55,32 +59,30 @@ export const flatMap = <T, E, C>(
   r: Result<T, E>,
   fn: (a: T) => Result<C, E>,
 ): Result<C, E> => (isDone(r) ? fn(val(r)) : r);
-export const match = <T, E, U>(
-  r: Result<T, E>,
-  matcher: { done: (a: T) => U; fail: (b: E) => U },
-): U => (isDone(r) ? matcher.done(val(r)) : matcher.fail(err(r)));
-export const fold = <T, E, U>(
-  r: Result<T, E>,
-  onFail: (error: E) => U,
-  onDone: (value: T) => U,
-): U => (isDone(r) ? onDone(val(r)) : onFail(err(r)));
-export const chain = <T, E, C>(
-  r: Result<T, E>,
-  fn: (a: T) => Result<C, E>,
-): Result<C, E> => (isDone(r) ? fn(val(r)) : r);
 export const filter = <T, E>(
   r: Result<T, E>,
   predicate: (a: T) => boolean,
   onFalse: E,
 ): Result<T, E> => (isDone(r) ? (predicate(val(r)) ? r : fail(onFalse)) : r);
+export const fold = <T, E, U>(
+  r: Result<T, E>,
+  onFail: (e: E) => U,
+  onDone: (v: T) => U,
+): U => (isDone(r) ? onDone(val(r)) : onFail(err(r)));
+export const match = <T, E, U>(
+  r: Result<T, E>,
+  matcher: { done: (a: T) => U; fail: (b: E) => U },
+): U => (isDone(r) ? matcher.done(val(r)) : matcher.fail(err(r)));
 export const recover = <T, E>(
   r: Result<T, E>,
-  fn: (error: E) => T,
+  fn: (value: E) => T,
 ): Result<T, E> => (isFail(r) ? done(fn(err(r))) : r);
+export const swap = <T, E>(r: Result<T, E>): Result<E, T> =>
+  isDone(r) ? fail(val(r)) : done(err(r));
 
 // Extract
-export const val = <T>(r: Done<T>): T => r.v;
-export const err = <E>(r: Fail<E>): E => r.e;
+export const val = <T>(r: Done<T>): T => r.value;
+export const err = <E>(r: Fail<E>): E => r.value;
 export const getOrElse = <T, E>(r: Result<T, E>, defaultValue: T): T =>
   isDone(r) ? val(r) : defaultValue;
 export const getOrUndefined = <T, E>(r: Result<T, E>): T | undefined =>
@@ -98,9 +100,8 @@ export const zip = <T, U, E>(
 ): Result<[T, U], E> => {
   if (isFail(a)) return a;
   if (isFail(b)) return b;
-  return done([val(a), val(b)]);
+  return done<[T, U]>([val(a), val(b)]);
 };
-
 export const apply = <T, U, E>(
   fn: Result<(a: T) => U, E>,
   arg: Result<T, E>,
@@ -115,7 +116,7 @@ export const tap = <T, E>(r: Result<T, E>, f: (a: T) => void): Result<T, E> => {
   if (isDone(r)) f(val(r));
   return r;
 };
-export const tapErr = <T, E>(
+export const tapFail = <T, E>(
   r: Result<T, E>,
   f: (b: E) => void,
 ): Result<T, E> => {
@@ -139,16 +140,18 @@ export const Result = {
   fromNullable,
   fromThrowable,
   fromPromise,
+  toPromise,
 
   // Ops
   map,
-  mapErr,
+  mapFail,
+  mapErr:mapFail,
   bimap,
   flatMap,
   filter,
   match,
   fold,
-  chain,
+  chain:flatMap,
   recover,
 
   // Extract
@@ -164,7 +167,8 @@ export const Result = {
   apply,
   orElse,
   tap,
-  tapErr,
+  tapFail,
+  tapErr:tapFail,
 };
 
 declare global {

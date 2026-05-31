@@ -1,21 +1,18 @@
 export interface Left<A> {
-  readonly $: "Left";
-  readonly value: A;
+  readonly l: A;
 }
 export interface Right<B> {
-  readonly $: "Right";
-  readonly value: B;
+  readonly r: B;
 }
 export type Either<A, B> = Left<A> | Right<B>;
 
 // Constructors
-export const left = <A>(value: A): Left<A> => ({ $: "Left", value });
-export const right = <B>(value: B): Right<B> => ({ $: "Right", value });
+export const left = <A>(value: A): Left<A> => ({ l: value });
+export const right = <B>(value: B): Right<B> => ({ r: value });
 
 // Guards
-export const isLeft = <A, B>(e: Either<A, B>): e is Left<A> => e.$ === "Left";
-export const isRight = <A, B>(e: Either<A, B>): e is Right<B> =>
-  e.$ === "Right";
+export const isLeft = <A, B>(e: Either<A, B>): e is Left<A> => "l" in e;
+export const isRight = <A, B>(e: Either<A, B>): e is Right<B> => "r" in e;
 
 // Conversions
 export const fromNullable = <A, B>(
@@ -37,6 +34,9 @@ export const fromPromise = <A, B>(
   onError: (e: unknown) => A,
 ): Promise<Either<A, B>> => promise.then(right, (e) => left(onError(e)));
 
+export const toPromise = <A, B>(e: Either<A, B>): Promise<B> =>
+  isRight(e) ? Promise.resolve(rgt(e)) : Promise.reject(lft(e));
+
 // Ops
 export const map = <A, B, C>(e: Either<A, B>, fn: (r: B) => C): Either<A, C> =>
   isRight(e) ? right(fn(rgt(e))) : e;
@@ -48,7 +48,7 @@ export const bimap = <A, B, C, D>(
   e: Either<A, B>,
   fl: (l: A) => C,
   fr: (r: B) => D,
-): Either<C, D> => (isLeft(e) ? left(fl(lft(e))) : right(fr(rgt(e))));
+): Either<C, D> => (isRight(e) ? right(fr(rgt(e))) :  left(fl(lft(e))));
 export const flatMap = <A, B, C>(
   e: Either<A, B>,
   fn: (value: B) => Either<A, C>,
@@ -58,25 +58,25 @@ export const filter = <A, B>(
   predicate: (value: B) => boolean,
   onFalse: A,
 ): Either<A, B> => (isRight(e) ? (predicate(rgt(e)) ? e : left(onFalse)) : e);
-export const chain = <A, B, C>(
-  e: Either<A, B>,
-  fn: (r: B) => Either<A, C>,
-): Either<A, C> => (isRight(e) ? fn(rgt(e)) : e);
 export const fold = <A, B, C>(
   e: Either<A, B>,
   onLeft: (l: A) => C,
   onRight: (r: B) => C,
-): C => (isLeft(e) ? onLeft(lft(e)) : onRight(rgt(e)));
+): C => (isRight(e) ? onRight(rgt(e)) : onLeft(lft(e)) );
 export const match = <A, B, C>(
   e: Either<A, B>,
   matcher: { right: (value: B) => C; left: (value: A) => C },
 ): C => (isRight(e) ? matcher.right(rgt(e)) : matcher.left(lft(e)));
+export const recover = <A, B>(
+  e: Either<A, B>,
+  fn: (value: A) => B,
+): Either<A, B> => (isLeft(e) ? right(fn(lft(e))) : e);
 export const swap = <A, B>(e: Either<A, B>): Either<B, A> =>
   isRight(e) ? left(rgt(e)) : right(lft(e));
 
 // Extract
-export const lft = <A>(e: Left<A>): A => e.value;
-export const rgt = <B>(e: Right<B>): B => e.value;
+export const lft = <A>(e: Left<A>): A => e.l;
+export const rgt = <B>(e: Right<B>): B => e.r;
 export const getOrElse = <A, B>(e: Either<A, B>, defaultValue: B): B =>
   isRight(e) ? rgt(e) : defaultValue;
 export const getOrNull = <A, B>(e: Either<A, B>): B | null =>
@@ -135,6 +135,7 @@ export const Either = {
   fromNullable,
   fromThrowable,
   fromPromise,
+  toPromise,
 
   // Ops
   map,
@@ -142,7 +143,7 @@ export const Either = {
   bimap,
   flatMap,
   filter,
-  chain,
+  chain:flatMap,
   fold,
   match,
   swap,
