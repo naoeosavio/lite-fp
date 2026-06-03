@@ -34,6 +34,29 @@ export const fromPromise = <A, B>(
   onError: (e: unknown) => A,
 ): Promise<Either<A, B>> => promise.then(right, (e) => left(onError(e)));
 
+export const fromPromiseCallback = <A, B>(
+  promise: Promise<B>,
+  onError: (e: unknown) => A,
+  callback: (result: Either<A, B>) => void,
+): void => {
+  promise.then(
+    (value) => callback(right(value)),
+    (error) => callback(left(onError(error))),
+  );
+};
+
+export const flatMapCallback = <A, B, C>(
+  e: Either<A, B>,
+  fn: (value: B) => Promise<Either<A, C>>,
+  callback: (result: Either<A, C>) => void,
+): void => {
+  if (isLeft(e)) {
+    callback(e);
+  } else {
+    fn(rgt(e)).then(callback);
+  }
+};
+
 export const toPromise = <A, B>(e: Either<A, B>): Promise<B> =>
   isRight(e) ? Promise.resolve(rgt(e)) : Promise.reject(lft(e));
 
@@ -136,6 +159,8 @@ export const Either = {
   fromNullable,
   fromThrowable,
   fromPromise,
+  fromPromiseSettled,
+  fromPromiseCallback,
   toPromise,
 
   // Ops
@@ -148,6 +173,9 @@ export const Either = {
   fold,
   match,
   swap,
+
+  // Callback
+  flatMapCallback,
 
   // Extract
   lft,

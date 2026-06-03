@@ -121,7 +121,36 @@ const r2 = await Result.fromPromise(
 const safe = Result.recover(r2, () => "default"); // Done("default")
 ```
 
- 
+### Callback-based conversions
+
+For callback-driven code — `fromPromiseCallback` fires **once** and is gone (like `setTimeout`,
+not `setInterval` or `EventEmitter.on`). After the Promise settles, the callback executes and
+becomes eligible for garbage collection — no cleanup, no leak.
+
+```ts
+import { Either, fromPromiseCallback, flatMapCallback, match } from "lite-fp";
+
+// Promise → Either delivered via callback (fires exactly once)
+fromPromiseCallback(
+  fetch("/api/user").then(r => r.json()),
+  e => new Error(String(e)),
+  result => {
+    // result is Either<Error, User> — callback is done after this tick
+    flatMapCallback(result, user => fetchPosts(user.id), postsResult => {
+      match(postsResult, {
+        right: posts => render(posts),
+        left:  err  => showError(err),
+      });
+    });
+  },
+);
+```
+
+Contrast with persistent subscriptions (`setInterval`, `emitter.on`, `addEventListener`,
+`subscribe`) where the callback stays registered until explicitly removed.
+
+```
+
 ### Pair 
 
 ```ts

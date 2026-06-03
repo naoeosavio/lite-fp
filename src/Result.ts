@@ -40,6 +40,29 @@ export const fromPromise = <T, E>(
   onError: (e: unknown) => E,
 ): Promise<Result<T, E>> => promise.then(done, (e) => fail(onError(e)));
 
+export const fromPromiseCallback = <T, E>(
+  promise: Promise<T>,
+  onError: (e: unknown) => E,
+  callback: (result: Result<T, E>) => void,
+): void => {
+  promise.then(
+    (value) => callback(done(value)),
+    (error) => callback(fail(onError(error))),
+  );
+};
+
+export const flatMapCallback = <T, E, C>(
+  r: Result<T, E>,
+  fn: (a: T) => Promise<Result<C, E>>,
+  callback: (result: Result<C, E>) => void,
+): void => {
+  if (isFail(r)) {
+    callback(r);
+  } else {
+    fn(val(r)).then(callback);
+  }
+};
+
 export const toPromise = <T, E>(r: Result<T, E>): Promise<T> =>
   isDone(r) ? Promise.resolve(val(r)) : Promise.reject(err(r));
 
@@ -141,6 +164,8 @@ export const Result = {
   fromNullable,
   fromThrowable,
   fromPromise,
+  fromPromiseSettled,
+  fromPromiseCallback,
   toPromise,
 
   // Ops
@@ -154,6 +179,9 @@ export const Result = {
   fold,
   chain: flatMap,
   recover,
+
+  // Callback
+  flatMapCallback,
 
   // Extract
   val,
