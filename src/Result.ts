@@ -1,22 +1,20 @@
 export interface Done<T> {
-  readonly $: "Done";
-  readonly value: T;
+  readonly v: T;
 }
 export interface Fail<E> {
-  readonly $: "Fail";
-  readonly value: E;
+  readonly e: E;
 }
 export type Result<T, E> = Done<T> | Fail<E>;
 
 // Constructors
-export const done = <T>(value: T): Done<T> => ({ $: "Done", value });
-export const fail = <E>(value: E): Fail<E> => ({ $: "Fail", value });
+export const done = <T>(value: T): Done<T> => ({ v: value });
+export const fail = <E>(value: E): Fail<E> => ({ e: value });
 export const Ok = done;
 export const Err = fail;
 
 // Type guards
-export const isDone = <T, E>(r: Result<T, E>): r is Done<T> => r.$ === "Done";
-export const isFail = <T, E>(r: Result<T, E>): r is Fail<E> => r.$ === "Fail";
+export const isDone = <T, E>(r: Result<T, E>): r is Done<T> => "v" in r;
+export const isFail = <T, E>(r: Result<T, E>): r is Fail<E> => "e" in r;
 export const isOk = isDone;
 export const isErr = isFail;
 
@@ -104,8 +102,8 @@ export const swap = <T, E>(r: Result<T, E>): Result<E, T> =>
   isDone(r) ? fail(val(r)) : done(err(r));
 
 // Extract
-export const val = <T>(r: Done<T>): T => r.value;
-export const err = <E>(r: Fail<E>): E => r.value;
+export const val = <T>(r: Done<T>): T => r.v;
+export const err = <E>(r: Fail<E>): E => r.e;
 export const getOrElse = <T, E>(r: Result<T, E>, defaultValue: T): T =>
   isDone(r) ? val(r) : defaultValue;
 export const getOrUndefined = <T, E>(r: Result<T, E>): T | undefined =>
@@ -148,6 +146,32 @@ export const tapFail = <T, E>(
   return r;
 };
 
+// Collection
+export const all = <T, E>(results: Result<T, E>[]): Result<T[], E> => {
+  const values: T[] = [];
+  for (const r of results) {
+    if (isFail(r)) return r;
+    values.push(val(r));
+  }
+  return done(values);
+};
+export const collect = all;
+
+export const flatten = <T, E>(r: Result<Result<T, E>, E>): Result<T, E> =>
+  isDone(r) ? val(r) : r;
+
+export const partition = <T, E>(
+  results: Result<T, E>[],
+): { done: T[]; fail: E[] } => {
+  const doneArr: T[] = [];
+  const failArr: E[] = [];
+  for (const r of results) {
+    if (isDone(r)) doneArr.push(val(r));
+    else failArr.push(err(r));
+  }
+  return { done: doneArr, fail: failArr };
+};
+
 export const Result = {
   // Constructors
   new: fromNullable,
@@ -164,7 +188,6 @@ export const Result = {
   fromNullable,
   fromThrowable,
   fromPromise,
-  fromPromiseSettled,
   fromPromiseCallback,
   toPromise,
 
@@ -190,6 +213,12 @@ export const Result = {
   getOrUndefined,
   getOrNull,
   getOrThrow,
+
+  // Collection
+  all,
+  collect,
+  flatten,
+  partition,
 
   // Combine
   zip,

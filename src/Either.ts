@@ -1,18 +1,21 @@
 export interface Left<A> {
-  readonly l: A;
+  readonly $: "Left";
+  readonly value: A;
 }
 export interface Right<B> {
-  readonly r: B;
+  readonly $: "Right";
+  readonly value: B;
 }
 export type Either<A, B> = Left<A> | Right<B>;
 
 // Constructors
-export const left = <A>(value: A): Left<A> => ({ l: value });
-export const right = <B>(value: B): Right<B> => ({ r: value });
+export const left = <A>(value: A): Left<A> => ({ $: "Left", value });
+export const right = <B>(value: B): Right<B> => ({ $: "Right", value });
 
 // Guards
-export const isLeft = <A, B>(e: Either<A, B>): e is Left<A> => "l" in e;
-export const isRight = <A, B>(e: Either<A, B>): e is Right<B> => "r" in e;
+export const isLeft = <A, B>(e: Either<A, B>): e is Left<A> => e.$ === "Left";
+export const isRight = <A, B>(e: Either<A, B>): e is Right<B> =>
+  e.$ === "Right";
 
 // Conversions
 export const fromNullable = <A, B>(
@@ -98,8 +101,8 @@ export const swap = <A, B>(e: Either<A, B>): Either<B, A> =>
   isRight(e) ? left(rgt(e)) : right(lft(e));
 
 // Extract
-export const lft = <A>(e: Left<A>): A => e.l;
-export const rgt = <B>(e: Right<B>): B => e.r;
+export const lft = <A>(e: Left<A>): A => e.value;
+export const rgt = <B>(e: Right<B>): B => e.value;
 export const getOrElse = <A, B>(e: Either<A, B>, defaultValue: B): B =>
   isRight(e) ? rgt(e) : defaultValue;
 export const getOrNull = <A, B>(e: Either<A, B>): B | null =>
@@ -145,6 +148,32 @@ export const tapLeft = <A, B>(
   return e;
 };
 
+// Collection
+export const all = <A, B>(eithers: Either<A, B>[]): Either<A, B[]> => {
+  const values: B[] = [];
+  for (const e of eithers) {
+    if (isLeft(e)) return e;
+    values.push(rgt(e));
+  }
+  return right(values);
+};
+export const collect = all;
+
+export const flatten = <A, B>(e: Either<A, Either<A, B>>): Either<A, B> =>
+  isRight(e) ? rgt(e) : e;
+
+export const partition = <A, B>(
+  eithers: Either<A, B>[],
+): { right: B[]; left: A[] } => {
+  const rightArr: B[] = [];
+  const leftArr: A[] = [];
+  for (const e of eithers) {
+    if (isRight(e)) rightArr.push(rgt(e));
+    else leftArr.push(lft(e));
+  }
+  return { right: rightArr, left: leftArr };
+};
+
 export const Either = {
   // Constructors
   new: fromNullable,
@@ -159,7 +188,6 @@ export const Either = {
   fromNullable,
   fromThrowable,
   fromPromise,
-  fromPromiseSettled,
   fromPromiseCallback,
   toPromise,
 
@@ -184,6 +212,12 @@ export const Either = {
   getOrNull,
   getOrUndefined,
   getOrThrow,
+
+  // Collection
+  all,
+  collect,
+  flatten,
+  partition,
 
   // Combine
   zip,

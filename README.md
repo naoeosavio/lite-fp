@@ -149,7 +149,28 @@ fromPromiseCallback(
 Contrast with persistent subscriptions (`setInterval`, `emitter.on`, `addEventListener`,
 `subscribe`) where the callback stays registered until explicitly removed.
 
+### Collection operations
+
+`all`/`collect`, `flatten`, and `partition` work on arrays of `Result` or `Either`:
+
+```ts
+import { Result, Either } from "lite-fp";
+
+// all — fail-fast: returns the first Fail/Left, or Done/Right with all values
+const ok = Result.all([Result.done(1), Result.done(2)]); // Done([1, 2])
+const err = Result.all([Result.done(1), Result.fail("nope")]); // Fail("nope")
+
+// partition — split into done/fail (or right/left) arrays
+const { done, fail } = Result.partition([
+  Result.done(1), Result.fail("a"), Result.done(2), Result.fail("b"),
+]); // done = [1, 2], fail = ["a", "b"]
+
+// flatten — unwrap nested Result/Either
+const nested = Result.done(Result.done(42));
+Result.flatten(nested); // Done(42)
 ```
+
+Also available: `Either.all`, `Either.collect`, `Either.flatten`, `Either.partition`.
 
 ### Pair 
 
@@ -174,14 +195,23 @@ const p2 = Pair.map(
   - Combine: `zip`, `apply`, `orElse`
 
 - Either
-  - Constructors: `left`, `right`, `new`, `fromNullable`, `fromThrowable`, `fromPromise`
+  - Constructors: `left`, `right`, `new`, `fromNullable`, `fromThrowable`, `fromPromise`, `fromPromiseSettled`, `fromPromiseCallback`
   - Type guards: `isLeft`, `isRight`
-  - Ops: `map`, `mapLeft`, `bimap`, `flatMap`, `chain`, `fold`, `match`, `swap`, `getOrElse`, `zip`, `apply`, `tap`, `tapLeft`
+  - Ops: `map`, `mapLeft`, `bimap`, `flatMap`, `chain`, `fold`, `match`, `swap`, `recover`, `getOrElse`, `getOrNull`, `getOrUndefined`, `getOrThrow`
+  - Combine: `zip`, `apply`, `orElse`, `tap`, `tapLeft`
+  - Collection: `all`, `collect`, `flatten`, `partition`
+  - Callback: `flatMapCallback`
+  - Conversions: `toPromise`
 
 - Result
-  - Constructors: `done`, `fail`, `new`, `fromNullable`, `fromThrowable`, `fromPromise`
-  - Type guards: `isDone`, `isFail`
-  - Ops: `map`, `mapError`, `flatMap`, `match`, `recover`, `getOrElse`, `getOrThrow`, `zip`, `apply`
+  - Constructors: `done`, `fail`, `Ok`, `Err`, `new`, `fromNullable`, `fromThrowable`, `fromPromise`, `fromPromiseSettled`, `fromPromiseCallback`
+  - Type guards: `isDone`, `isFail`, `isOk`, `isErr`
+  - Ops: `map`, `mapFail`, `mapErr`, `bimap`, `flatMap`, `chain`, `fold`, `match`, `filter`, `recover`, `swap`
+  - Extract: `val`, `err`, `getOrElse`, `getOrUndefined`, `getOrNull`, `getOrThrow`
+  - Combine: `zip`, `apply`, `orElse`, `tap`, `tapFail`, `tapErr`
+  - Collection: `all`, `collect`, `flatten`, `partition`
+  - Callback: `flatMapCallback`
+  - Conversions: `toPromise`
 
 - Maybe (T | null | undefined)
   - Constructors: `new`, `just`, `nothing`/`nothingNull`/`nothingUndefined`, `fromNullable`, `fromPredicate`, `fromThrowable`, `fromPromise`
