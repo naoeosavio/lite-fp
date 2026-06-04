@@ -463,6 +463,146 @@ export const distinct = <T>(
   return derived;
 };
 
+// ═══════════════════════════════════════════════════════════════════
+// LAZY derivation
+// ───────────────────────────────────────────────────────────────────
+// No internal state, no implicit subscriptions. Computes on `.read`.
+// `write` is a no-op. `.watch()` is opt-in and returns cleanup.
+
+/**
+ * Lazy single-source projection. No state, no subscription.
+ * `read` calls `fn(source.read)` on every access. `write` is a no-op.
+ */
+export const mapLazy = <T, U>(
+  s: Signal<T>,
+  fn: (value: T) => U,
+): Signal<U> => ({
+  get read(): U {
+    return fn(s.read);
+  },
+
+  write(_value: U): void {
+    // no-op: value is derived from source
+  },
+
+  watch(cb: (value: U) => void): () => void {
+    return s.watch((v) => cb(fn(v)));
+  },
+});
+
+/** Alias for `mapLazy`. */
+export const derive = mapLazy;
+
+/**
+ * Lazy dynamic switching between inner signals. No stored state.
+ * `read` reads through to the current inner signal.
+ */
+export const flatMapLazy = <T, U>(
+  s: Signal<T>,
+  fn: (value: T) => Signal<U>,
+): Signal<U> => ({
+  get read(): U {
+    return fn(s.read).read;
+  },
+
+  write(_value: U): void {
+    // no-op
+  },
+
+  watch(cb: (value: U) => void): () => void {
+    let inner = fn(s.read);
+    let unsubInner = inner.watch(cb);
+
+    const unsubSource = s.watch((v) => {
+      unsubInner();
+      inner = fn(v);
+      unsubInner = inner.watch(cb);
+      cb(inner.read);
+    });
+
+    return () => {
+      unsubInner();
+      unsubSource();
+    };
+  },
+});
+
+/**
+ * Lazy filter. `read` returns the source value if it passes the predicate,
+ * otherwise the `fallback` value. `watch` only fires when predicate passes.
+ */
+export const filterLazy = <T>(
+  s: Signal<T>,
+  predicate: (value: T) => boolean,
+  fallback: T,
+): Signal<T> => ({
+  get read(): T {
+    const v = s.read;
+    return predicate(v) ? v : fallback;
+  },
+
+  write(_value: T): void {
+    // no-op
+  },
+
+  watch(cb: (value: T) => void): () => void {
+    return s.watch((v) => {
+      if (predicate(v)) cb(v);
+    });
+  },
+});
+
+/**
+ * Lazy combine of two signals into a tuple signal. No stored state.
+ */
+export const zipLazy = <T, U>(a: Signal<T>, b: Signal<U>): Signal<[T, U]> => ({
+  get read(): [T, U] {
+    return [a.read, b.read];
+  },
+
+  write(_value: [T, U]): void {
+    // no-op
+  },
+
+  watch(cb: (value: [T, U]) => void): () => void {
+    const fire = () => cb([a.read, b.read]);
+    const unsubA = a.watch(fire);
+    const unsubB = b.watch(fire);
+    return () => {
+      unsubA();
+      unsubB();
+    };
+  },
+});
+
+/**
+ * Lazy merge of N signals into an array signal. No stored state.
+ */
+export const mergeLazy = <T extends readonly Signal<unknown>[]>(
+  signals: [...T],
+): Signal<{ [K in keyof T]: T[K] extends Signal<infer V> ? V : never }> => {
+  const readAll = () => signals.map((s) => s.read);
+
+  return {
+    get read() {
+      return readAll();
+    },
+
+    write(_value: unknown[]): void {
+      // no-op
+    },
+
+    watch(cb: (value: unknown[]) => void): () => void {
+      const unsubs = signals.map((s) => s.watch(() => cb(readAll())));
+      return () => {
+        for (const u of unsubs) u();
+      };
+    },
+  } as Signal<{
+    [K in keyof T]: T[K] extends Signal<infer V> ? V : never;
+  }>;
+};
+
 // ── Async ──────────────────────────────────────────────────────────
 
 /**
@@ -517,6 +657,10 @@ export const Signal = {
   filterReactive,
   foldReactive,
   historyReactive,
+  mapLazy,
+  derive,
+  flatMapLazy,
+  filterLazy,
 
   // Extract
   getOr,
@@ -529,6 +673,8 @@ export const Signal = {
   combine,
   zipReactive,
   mergeReactive,
+  zipLazy,
+  mergeLazy,
   apply,
   orElse,
   tap,
