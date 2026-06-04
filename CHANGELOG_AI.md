@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.7.0 — 2026-06-03
+
+Breaking Changes
+- **`fromPromiseSettled` is no longer exported from the `Either` and `Result` namespaces** – it remains available as a top-level function only.
+- **Removed the `mapErr` and `tapErr` aliases** for `Result`; use `mapFail` and `tapFail` instead.
+
+Features
+- Added **collection operations** for arrays of `Either` and `Result`: `all`/`collect`, `flatten`, and `partition`.
+- Broadened module exports to include previously internal utility functions: `mapLeft`, `tapLeft`, `mapFail`, `tapFail`, `nothingNull`, `nothingUndefined`, and others.
+- Introduced **callback-based async conversions** `fromPromiseCallback` and `flatMapCallback` for `Either` and `Result`, enabling fire-once flows without persistent subscriptions.
+- Added `flatMap` as an alias for `chain` in `Either` and `Result`.
+
+Fixes
+- **Prototype safety**: `Promise.prototype.toEither`, `Promise.prototype.toOption`, `Promise.prototype.toResult`, and `Array.prototype.firstOption` now use `Object.defineProperty` with existence checks to avoid conflicts with polyfills or other libraries.
+- **`Maybe.fromNullable`** now correctly returns `nothing()` for `null` or `undefined` inputs and `just(value)` for all other values (using a `== null` check).
+- **Error wrapping**: `Either.getOrThrow` and `Result.getOrThrow` now wrap non‑Error thrown values in `Error` instances for consistent error handling.
+
+---
+
 ## Unreleased - 2026-05-28
 
 ## [0.6.0] - 2026-05-28
