@@ -75,6 +75,10 @@ export {
 
 // Signal
 export {
+  apply,
+  combine,
+  getOrNull,
+  getOrUndefined,
   isSignal,
   read,
   Signal,

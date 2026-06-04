@@ -333,6 +333,70 @@ export const historyReactive = <T>(
   return derived;
 };
 
+// ── Extract ────────────────────────────────────────────────────────
+
+/**
+ * Read the signal value, returning `fallback` if it is `null` or `undefined`.
+ */
+export const getOr = <T>(s: Signal<T>, fallback: T): T => {
+  const v = s.read;
+  return v != null ? v : fallback;
+};
+
+/** Read the signal value, returning `null` if it is `null` or `undefined`. */
+export const getOrNull = <T>(s: Signal<T>): T | null => s.read ?? null;
+
+/** Read the signal value, returning `undefined` if it is `null` or `undefined`. */
+export const getOrUndefined = <T>(s: Signal<T>): T | undefined =>
+  s.read ?? undefined;
+
+// ── Combine ────────────────────────────────────────────────────────
+
+/**
+ * If the first signal's value is `null` or `undefined`, use the second.
+ * Returns a derived signal.
+ */
+export const orElse = <T>(a: Signal<T>, b: Signal<T>): Signal<T> => {
+  const derived = signal(getOr(a, b.read));
+  a.watch((va) => derived.write(va != null ? va : b.read));
+  b.watch((vb) => {
+    if (a.read == null) derived.write(vb);
+  });
+  return derived;
+};
+
+/**
+ * Combine homogeneous signals into a `Signal<T[]>`.
+ * Updates when any source changes.
+ */
+export const combine = <T>(signals: Signal<T>[]): Signal<T[]> => {
+  const derived = signal(signals.map((s) => s.read));
+
+  for (let i = 0; i < signals.length; i++) {
+    signals[i].watch((v) => {
+      const next = [...derived.read];
+      next[i] = v;
+      derived.write(next);
+    });
+  }
+
+  return derived;
+};
+
+/**
+ * Applicative: apply a signal of functions to a signal of values.
+ * Updates when either signal changes.
+ */
+export const apply = <T, U>(
+  fn: Signal<(value: T) => U>,
+  arg: Signal<T>,
+): Signal<U> => {
+  const derived = signal(fn.read(arg.read));
+  fn.watch((f) => derived.write(f(arg.read)));
+  arg.watch((v) => derived.write(fn.read(v)));
+  return derived;
+};
+
 // ── Side effects ───────────────────────────────────────────────────
 
 /**
@@ -365,6 +429,39 @@ export const toPromise = <T>(s: Signal<T>): Promise<T> =>
       unsub();
     });
   });
+
+// ── Utilities ──────────────────────────────────────────────────────
+
+/**
+ * Create a derived signal that tracks the previous value.
+ * Starts with `initial` as the previous value.
+ */
+export const previous = <T>(s: Signal<T>, initial: T): Signal<T> => {
+  let prev = initial;
+  const derived = signal(initial);
+  s.watch((v) => {
+    derived.write(prev);
+    prev = v;
+  });
+  return derived;
+};
+
+/**
+ * Create a derived signal that only emits when the value is distinct
+ * from the previous one. Uses `Object.is` by default, or a custom
+ * comparator.
+ */
+export const distinct = <T>(
+  s: Signal<T>,
+  eq?: (a: T, b: T) => boolean,
+): Signal<T> => {
+  const isEq = eq ?? Object.is;
+  const derived = signal(s.read);
+  s.watch((v) => {
+    if (!isEq(derived.read, v)) derived.write(v);
+  });
+  return derived;
+};
 
 // ── Async ──────────────────────────────────────────────────────────
 
@@ -421,11 +518,23 @@ export const Signal = {
   foldReactive,
   historyReactive,
 
+  // Extract
+  getOr,
+  getOrNull,
+  getOrUndefined,
+
   // Combine
   zip,
   merge,
+  combine,
   zipReactive,
   mergeReactive,
+  apply,
+  orElse,
   tap,
   tapWatch,
+
+  // Utilities
+  previous,
+  distinct,
 };
