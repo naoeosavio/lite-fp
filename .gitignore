@@ -142,3 +142,4 @@ tsup.config.ts
 .npm*
 .biome*
 biome.*
+scripts/
