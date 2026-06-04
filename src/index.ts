@@ -72,3 +72,13 @@ export {
   tapFail,
   val,
 } from "./Result";
+
+// Signal
+export {
+  get,
+  Signal,
+  set,
+  signal,
+  sub,
+  update,
+} from "./Signal";
