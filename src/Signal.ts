@@ -116,6 +116,57 @@ export const toggle = (s: Signal<boolean>): void => s.write(!s.read);
 /** Reset a signal to a default value. */
 export const reset = <T>(s: Signal<T>, value: T): void => s.write(value);
 
+/** Remove a specific listener previously added with `watch`. */
+export const unwatch = <T>(s: Signal<T>, fn: (value: T) => void): void => {
+  s.watch(fn)();
+};
+
+/** Listen to the next change only — fires once, then auto-unsubscribes. */
+export const once = <T>(s: Signal<T>, fn: (value: T) => void): void => {
+  const unsub = s.watch((v) => {
+    fn(v);
+    unsub();
+  });
+};
+
+/** Watch with a predicate — only fires when `predicate(value)` is true. */
+export const when = <T>(
+  s: Signal<T>,
+  predicate: (value: T) => boolean,
+  fn: (value: T) => void,
+): (() => void) =>
+  s.watch((v) => {
+    if (predicate(v)) fn(v);
+  });
+
+/** Lazy boolean negation. Returns `Signal<boolean>` that inverts the source. */
+export const not = (s: Signal<boolean>): Signal<boolean> =>
+  mapLazy(s, (v) => !v);
+
+/**
+ * Create a Signal that accepts `write` only **once**.
+ * Subsequent writes are silently ignored.
+ */
+export const onceSignal = <T>(initial: T): Signal<T> => {
+  const raw = signal(initial);
+  let sealed = false;
+
+  return {
+    get read(): T {
+      return raw.read;
+    },
+
+    watch: raw.watch.bind(raw),
+
+    write(value: T): void {
+      if (!sealed) {
+        sealed = true;
+        raw.write(value);
+      }
+    },
+  };
+};
+
 // ═══════════════════════════════════════════════════════════════════
 // EAGER derivation
 // ───────────────────────────────────────────────────────────────────
@@ -647,6 +698,11 @@ export const Signal = {
   update,
   toggle,
   reset,
+  unwatch,
+  once,
+  when,
+  not,
+  onceSignal,
   map,
   flatMap,
   filter,
