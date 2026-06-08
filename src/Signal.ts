@@ -167,6 +167,64 @@ export const onceSignal = <T>(initial: T): Signal<T> => {
   };
 };
 
+// ── Debug ──────────────────────────────────────────────────────────
+
+export interface WatcherInfo {
+  name: string;
+  signal: Signal<unknown>;
+}
+
+export interface Debug {
+  count(): number;
+  isWatching(): boolean;
+  list(): WatcherInfo[];
+  clear(): void;
+}
+
+/**
+ * Wrap a signal with a debug overlay that tracks `watch`/unwatch calls.
+ * Returns `[wrappedSignal, debug]` — use the wrapped signal everywhere.
+ */
+export const withDebug = <T>(s: Signal<T>): [Signal<T>, Debug] => {
+  const active = new Map<(value: T) => void, () => void>();
+
+  const origWatch = s.watch.bind(s);
+
+  const wrapped: Signal<T> = {
+    get read(): T {
+      return s.read;
+    },
+
+    write: s.write.bind(s),
+
+    watch(cb: (value: T) => void): () => void {
+      const unsub = origWatch(cb);
+      active.set(cb, unsub);
+      return () => {
+        active.delete(cb);
+        unsub();
+      };
+    },
+  };
+
+  return [
+    wrapped,
+    {
+      count: () => active.size,
+      isWatching: () => active.size > 0,
+      list: () =>
+        [...active.keys()].map((cb) => ({
+          name: cb.name || "anonymous",
+          signal: wrapped as Signal<unknown>,
+        })),
+      clear: () => {
+        for (const unsub of active.values()) unsub();
+        active.clear();
+      },
+    },
+  ];
+};
+
 // ═══════════════════════════════════════════════════════════════════
 // EAGER derivation
 // ───────────────────────────────────────────────────────────────────
@@ -703,6 +761,7 @@ export const Signal = {
   when,
   not,
   onceSignal,
+  withDebug,
   map,
   flatMap,
   filter,
