@@ -71,6 +71,7 @@
     "build": "tsup",
     "format": "biome check --write src",
     "check": "biome check src",
+    "test": "npx tsx test/index.ts",
     "ci": "npm run lint && npm run check && npm run build",
     "prepublishOnly": "npm run ci"
   },
