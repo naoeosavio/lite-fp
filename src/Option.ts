@@ -120,32 +120,3 @@ export const Option = {
   orElse,
   tap,
 };
-
-declare global {
-  interface Array<T> {
-    firstOption(): Option<T>;
-  }
-  interface Promise<T> {
-    toOption(): Promise<Option<T>>;
-  }
-}
-
-if (!("firstOption" in Array.prototype)) {
-  Object.defineProperty(Array.prototype, "firstOption", {
-    value: function <T>(this: T[]): Option<T> {
-      return this[0] ? some(this[0]) : none();
-    },
-    writable: true,
-    configurable: true,
-  });
-}
-
-if (!("toOption" in Promise.prototype)) {
-  Object.defineProperty(Promise.prototype, "toOption", {
-    value: function <T>(this: Promise<T>): Promise<Option<T>> {
-      return fromPromise(this);
-    },
-    writable: true,
-    configurable: true,
-  });
-}

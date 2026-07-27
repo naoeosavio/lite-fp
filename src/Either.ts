@@ -226,22 +226,3 @@ export const Either = {
   tap,
   tapLeft,
 };
-
-declare global {
-  interface Promise<T> {
-    toEither<A>(onError: (e: unknown) => A): Promise<Either<A, T>>;
-  }
-}
-
-if (!("toEither" in Promise.prototype)) {
-  Object.defineProperty(Promise.prototype, "toEither", {
-    value: function <T, L = unknown>(
-      this: Promise<T>,
-      onError: (e: unknown) => L,
-    ): Promise<Either<L, T>> {
-      return fromPromise(this, onError);
-    },
-    writable: true,
-    configurable: true,
-  });
-}

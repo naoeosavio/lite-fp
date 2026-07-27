@@ -228,22 +228,3 @@ export const Result = {
   tapFail,
   tapErr: tapFail,
 };
-
-declare global {
-  interface Promise<T> {
-    toResult<E = unknown>(onError: (e: unknown) => E): Promise<Result<T, E>>;
-  }
-}
-
-if (!("toResult" in Promise.prototype)) {
-  Object.defineProperty(Promise.prototype, "toResult", {
-    value: function <T, E = unknown>(
-      this: Promise<T>,
-      onError: (e: unknown) => E,
-    ): Promise<Result<T, E>> {
-      return fromPromise(this, onError);
-    },
-    writable: true,
-    configurable: true,
-  });
-}
