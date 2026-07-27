@@ -1,14 +1,47 @@
 {
   "name": "lite-fp",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Functional programming utilities.",
   "license": "MIT",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./either": {
+      "types": "./dist/Either.d.ts",
+      "import": "./dist/Either.mjs",
+      "require": "./dist/Either.js"
+    },
+    "./maybe": {
+      "types": "./dist/Maybe.d.ts",
+      "import": "./dist/Maybe.mjs",
+      "require": "./dist/Maybe.js"
+    },
+    "./option": {
+      "types": "./dist/Option.d.ts",
+      "import": "./dist/Option.mjs",
+      "require": "./dist/Option.js"
+    },
+    "./pair": {
+      "types": "./dist/Pair.d.ts",
+      "import": "./dist/Pair.mjs",
+      "require": "./dist/Pair.js"
+    },
+    "./result": {
+      "types": "./dist/Result.d.ts",
+      "import": "./dist/Result.mjs",
+      "require": "./dist/Result.js"
+    },
+    "./extensions": {
+      "types": "./dist/extensions.d.ts",
+      "import": "./dist/extensions.mjs",
+      "require": "./dist/extensions.js"
     },
     "./package.json": "./package.json"
   },
