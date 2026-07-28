@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.8.0 — 2026-07-27
+
+### Features
+- Configure package subpath exports and TypeScript declarations for optimized tree-shaking
+
+### Refactors
+- Update type guards and streamline `Maybe` tap implementation
+- Extract global prototype augmentations into a dedicated `extensions.ts` module
+
+### Tests
+- Add comprehensive test suites for functional programming primitives, monads, and prototype extensions
+- Introduce a lightweight, zero-dependency test runner and assertion utility framework
+- Include test execution in the CI pipeline
+
+---
+
 ## v0.7.0 — 2026-06-03
 
 Breaking Changes
@@ -18,8 +34,6 @@ Fixes
 - **Error wrapping**: `Either.getOrThrow` and `Result.getOrThrow` now wrap non‑Error thrown values in `Error` instances for consistent error handling.
 
 ---
-
-## Unreleased - 2026-05-28
 
 ## [0.6.0] - 2026-05-28
 
