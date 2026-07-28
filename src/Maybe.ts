@@ -11,7 +11,7 @@ export const nothingNull = (): null => null;
 export const nothingUndefined = (): undefined => undefined;
 
 // Guards
-export const isJust = <T>(m: Maybe<T>): m is T => m != null; // not null/undefined
+export const isJust = <T>(m: Maybe<T>): m is NonNullable<T> => m != null; // not null/undefined
 export const isNothing = <T>(m: Maybe<T>): m is Nothing => m == null; // null or undefined
 export const isNull = <T>(m: Maybe<T>): m is null => m === null;
 export const isUndefined = <T>(m: Maybe<T>): m is undefined => m === undefined;
@@ -74,8 +74,8 @@ export const apply = <T, U>(
 export const orElse = <T>(opt: Maybe<T>, other: Maybe<T>): Maybe<T> =>
   isNothing(opt) ? other : opt;
 export const tap = <T>(m: Maybe<T>, fn: (v: T) => void): Maybe<T> => {
-  if (isJust(m)) just(fn(m));
-  return just(m);
+  if (isJust(m)) fn(m);
+  return m;
 };
 
 export const Maybe = {

@@ -1,3 +1,5 @@
+import { getOrThrow } from "../dist/Option";
+import { getOrElse, swap } from "../src/Result";
 import { describe, test, expect } from "./utils";
 
 describe("Extensions", () => {
@@ -31,7 +33,7 @@ describe("Extensions", () => {
     test("should return Some when promise resolves", async () => {
       const result = await Promise.resolve("data").toOption();
       expect(result.$).toBe("Some");
-      expect(result.value).toBe("data");
+      expect(getOrThrow(result)).toBe("data");
     });
 
     test("should return None when promise rejects", async () => {
@@ -41,7 +43,7 @@ describe("Extensions", () => {
 
     test("should work with number values", async () => {
       const result = await Promise.resolve(42).toOption();
-      expect(result.value).toBe(42);
+      expect(getOrThrow(result)).toBe(42);
     });
   });
 
@@ -51,7 +53,7 @@ describe("Extensions", () => {
         (e: unknown) => `Error: ${String(e)}`,
       );
       expect("v" in result).toBe(true);
-      expect((result as { v: string }).v).toBe("data");
+      expect(getOrElse(result, "")).toBe("data");
     });
 
     test("should return Fail when promise rejects", async () => {
@@ -59,7 +61,7 @@ describe("Extensions", () => {
         (e: unknown) => `Error: ${String(e)}`,
       );
       expect("e" in result).toBe(true);
-      expect((result as { e: string }).e).toBe("Error: fail");
+      expect(getOrElse(swap(result), '')).toBe("Error: fail");
     });
   });
 
@@ -67,7 +69,7 @@ describe("Extensions", () => {
     test("should return Some with first element", () => {
       const result = [1, 2, 3].firstOption();
       expect(result.$).toBe("Some");
-      expect(result.value).toBe(1);
+      expect(getOrThrow(result)).toBe(1);
     });
 
     test("should return None for empty array", () => {
@@ -77,7 +79,7 @@ describe("Extensions", () => {
 
     test("should work with string arrays", () => {
       const result = ["a", "b", "c"].firstOption();
-      expect(result.value).toBe("a");
+      expect(getOrThrow(result)).toBe("a");
     });
   });
 });

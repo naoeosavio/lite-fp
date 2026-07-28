@@ -232,7 +232,7 @@ describe("Pair", () => {
     describe("apply", () => {
       test("should apply fn pair to value pair", () => {
         const fnPair = make(
-          (a: number) => a * 2,
+          (a: number) => String(a),
           (b: string) => b.toUpperCase(),
         );
         const vPair = make(5, "hello");

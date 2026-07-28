@@ -102,19 +102,19 @@ describe("Either", () => {
       test("should return Right for non-null value", () => {
         const result = fromNullable(42, "was null");
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should return Left for null", () => {
         const result = fromNullable(null, "was null");
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("was null");
+        expect(getOrThrow(swap(result))).toBe("was null");
       });
 
       test("should return Left for undefined", () => {
         const result = fromNullable(undefined, "was undefined");
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("was undefined");
+        expect(getOrThrow(swap(result))).toBe("was undefined");
       });
     });
 
@@ -125,7 +125,7 @@ describe("Either", () => {
           (e) => `Parse error: ${(e as Error).message}`,
         );
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toEqual({ ok: true });
+        expect(getOrThrow(result)).toEqual({ ok: true });
       });
 
       test("should return Left when function throws", () => {
@@ -134,7 +134,7 @@ describe("Either", () => {
           (e) => `Parse error: ${(e as Error).message}`,
         );
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toContain("Parse error");
+        expect(getOrThrow(swap(result))).toContain("Parse error");
       });
 
       test("should return Left with custom error object", () => {
@@ -145,7 +145,7 @@ describe("Either", () => {
           () => ({ code: 500, msg: "boom" }),
         );
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toEqual({ code: 500, msg: "boom" });
+        expect(getOrThrow(swap(result))).toEqual({ code: 500, msg: "boom" });
       });
     });
 
@@ -156,7 +156,7 @@ describe("Either", () => {
           (e) => `Error: ${String(e)}`,
         );
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe("data");
+        expect(getOrThrow(result)).toBe("data");
       });
 
       test("should return Left when promise rejects", async () => {
@@ -165,7 +165,7 @@ describe("Either", () => {
           (e) => `Error: ${String(e)}`,
         );
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("Error: fail");
+        expect(getOrThrow(swap(result))).toBe("Error: fail");
       });
     });
 
@@ -191,18 +191,18 @@ describe("Either", () => {
       test("should transform Right value", () => {
         const result = map(right(5), (x) => x * 2);
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe(10);
+        expect(getOrThrow(result)).toBe(10);
       });
 
       test("should not transform Left value", () => {
-        const result = map<string, number, number>(left("error"), (x) => x * 2);
+        const result = map(left("error") as Either<string, number>, (x: number) => x * 2);
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("error");
+        expect(getOrThrow(swap(result))).toBe("error");
       });
 
       test("should change the type of Right value", () => {
         const result = map(right(42), (x) => `num: ${x}`);
-        expect(rgt(result)).toBe("num: 42");
+        expect(getOrThrow(result)).toBe("num: 42");
       });
     });
 
@@ -210,13 +210,13 @@ describe("Either", () => {
       test("should transform Left value", () => {
         const result = mapLeft(left("err"), (x) => x.toUpperCase());
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("ERR");
+        expect(getOrThrow(swap(result))).toBe("ERR");
       });
 
       test("should not transform Right value", () => {
-        const result = mapLeft(right(42), (x: string) => x.toUpperCase());
+        const result = mapLeft(right<number>(42), (x: string) => x.toUpperCase());
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
     });
 
@@ -228,7 +228,7 @@ describe("Either", () => {
           (r: number) => r * 2,
         );
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("ERR");
+        expect(getOrThrow(swap(result))).toBe("ERR");
       });
 
       test("should apply right fn on Right", () => {
@@ -238,7 +238,7 @@ describe("Either", () => {
           (r: number) => r * 2,
         );
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe(10);
+        expect(getOrThrow(result)).toBe(10);
       });
     });
 
@@ -246,23 +246,23 @@ describe("Either", () => {
       test("should chain on Right value", () => {
         const result = flatMap(right(5), (x) => right(x * 2));
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe(10);
+        expect(getOrThrow(result)).toBe(10);
       });
 
       test("should not chain on Left value", () => {
-        const result = flatMap<string, number, number>(left("error"), (x) =>
+        const result = flatMap(left("error") as Either<string, number>, (x: number) =>
           right(x * 2),
         );
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("error");
+        expect(getOrThrow(swap(result))).toBe("error");
       });
 
       test("should allow switching from Right to Left", () => {
-        const result = flatMap(right(0), (x) =>
-          x > 0 ? right(x) : left<string, number>("non-positive"),
+        const result = flatMap(right(0), (x: number): Either<string, number> =>
+          x > 0 ? right(x) : left("non-positive"),
         );
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("non-positive");
+        expect(getOrThrow(swap(result))).toBe("non-positive");
       });
     });
 
@@ -270,19 +270,19 @@ describe("Either", () => {
       test("should keep Right when predicate passes", () => {
         const result = filter(right(10), (x) => x > 5, "too small");
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe(10);
+        expect(getOrThrow(result)).toBe(10);
       });
 
       test("should become Left when predicate fails", () => {
         const result = filter(right(3), (x) => x > 5, "too small");
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("too small");
+        expect(getOrThrow(swap(result))).toBe("too small");
       });
 
       test("should keep Left unchanged", () => {
-        const result = filter(left("original"), (_x) => true, "ignored");
+        const result = filter(left("original"), (_x: unknown) => true, "ignored");
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("original");
+        expect(getOrThrow(swap(result))).toBe("original");
       });
     });
 
@@ -335,20 +335,20 @@ describe("Either", () => {
 
     describe("recover", () => {
       test("should recover Left into Right", () => {
-        const result = recover(left("error"), (_e) => 42);
+        const result = recover(left("error"), (_e: string) => 42);
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should not change Right value", () => {
-        const result = recover(right(10), (_e) => 99);
+        const result = recover(right(10), (_e: string) => 99);
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe(10);
+        expect(getOrThrow(result)).toBe(10);
       });
 
       test("should use Left value in recovery fn", () => {
         const result = recover(left(5), (e: number) => e * 10);
-        expect(rgt(result)).toBe(50);
+        expect(getOrThrow(result)).toBe(50);
       });
     });
 
@@ -356,19 +356,19 @@ describe("Either", () => {
       test("should swap Left to Right", () => {
         const result = swap(left("error"));
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toBe("error");
+        expect(getOrThrow(result)).toBe("error");
       });
 
       test("should swap Right to Left", () => {
         const result = swap(right(42));
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe(42);
+        expect(getOrThrow(swap(result))).toBe(42);
       });
 
       test("double swap returns original", () => {
         const original = left("error");
         const swapped = swap(swap(original));
-        expect(lft(swapped)).toBe("error");
+        expect(getOrThrow(swap(swapped))).toBe("error");
       });
     });
   });
@@ -439,58 +439,58 @@ describe("Either", () => {
       test("should combine two Rights", () => {
         const result = zip(right(1), right("a"));
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toEqual([1, "a"]);
+        expect(getOrThrow(result)).toEqual([1, "a"]);
       });
 
       test("should return first Left if first is Left", () => {
         const result = zip(left("error1"), right(1));
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("error1");
+        expect(getOrThrow(swap(result))).toBe("error1");
       });
 
       test("should return second Left if second is Left", () => {
         const result = zip(right(1), left("error2"));
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("error2");
+        expect(getOrThrow(swap(result))).toBe("error2");
       });
     });
 
     describe("apply", () => {
       test("should apply function to value when both are Right", () => {
-        const fn = right<string, (x: number) => string>((x) => `val: ${x}`);
+        const fn: Either<string, (x: number) => string> = right((x: number) => `val: ${x}`);
         const result = apply(fn, right(10));
-        expect(rgt(result)).toBe("val: 10");
+        expect(getOrThrow(result)).toBe("val: 10");
       });
 
       test("should return Left if fn is Left", () => {
-        const fn = left<string, (x: number) => string>("error");
+        const fn: Either<string, (x: number) => string> = left("error");
         const result = apply(fn, right(10));
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("error");
+        expect(getOrThrow(swap(result))).toBe("error");
       });
 
       test("should return Left if arg is Left", () => {
-        const fn = right<string, (x: number) => string>((x) => `val: ${x}`);
+        const fn: Either<string, (x: number) => string> = right((x: number) => `val: ${x}`);
         const result = apply(fn, left("error"));
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("error");
+        expect(getOrThrow(swap(result))).toBe("error");
       });
     });
 
     describe("orElse", () => {
       test("should return first if Right", () => {
         const result = orElse(right(42), left("fallback"));
-        expect(rgt(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should return second if first is Left", () => {
         const result = orElse(left("error"), right(42));
-        expect(rgt(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should return second Left if both are Left", () => {
         const result = orElse(left("first"), left("second"));
-        expect(lft(result)).toBe("second");
+        expect(getOrThrow(swap(result))).toBe("second");
       });
     });
 
@@ -501,7 +501,7 @@ describe("Either", () => {
           sideEffect = x;
         });
         expect(sideEffect).toBe(42);
-        expect(rgt(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should not call side effect on Left", () => {
@@ -537,19 +537,19 @@ describe("Either", () => {
       test("should collect all Right values", () => {
         const result = all([right(1), right(2), right(3)]);
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toEqual([1, 2, 3]);
+        expect(getOrThrow(result)).toEqual([1, 2, 3]);
       });
 
       test("should return first Left encountered", () => {
         const result = all([right(1), left("error"), right(3)]);
         expect(isLeft(result)).toBe(true);
-        expect(lft(result)).toBe("error");
+        expect(getOrThrow(swap(result))).toBe("error");
       });
 
       test("should work with empty array", () => {
         const result = all([]);
         expect(isRight(result)).toBe(true);
-        expect(rgt(result)).toEqual([]);
+        expect(getOrThrow(result)).toEqual([]);
       });
     });
 
@@ -557,7 +557,7 @@ describe("Either", () => {
       test("should flatten Right-Right to Right", () => {
         const nested: Either<string, Either<string, number>> = right(right(42));
         const result = flatten(nested);
-        expect(rgt(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should flatten Right-Left to Left", () => {
@@ -565,13 +565,13 @@ describe("Either", () => {
           left("inner error"),
         );
         const result = flatten(nested);
-        expect(lft(result)).toBe("inner error");
+        expect(getOrThrow(swap(result))).toBe("inner error");
       });
 
       test("should keep Left unchanged", () => {
         const nested: Either<string, Either<string, number>> = left("outer error");
         const result = flatten(nested);
-        expect(lft(result)).toBe("outer error");
+        expect(getOrThrow(swap(result))).toBe("outer error");
       });
     });
 
@@ -612,7 +612,7 @@ describe("Either", () => {
     test("Either.left should work like left", () => {
       const result = Either.left("error");
       expect(isLeft(result)).toBe(true);
-      expect(lft(result)).toBe("error");
+      expect(getOrThrow(swap(result))).toBe("error");
     });
 
     test("Either.right should work like right", () => {
@@ -632,12 +632,12 @@ describe("Either", () => {
 
     test("Either.fromNullable should work", () => {
       const result = Either.fromNullable("hello", "was null");
-      expect(rgt(result)).toBe("hello");
+      expect(getOrThrow(result)).toBe("hello");
     });
 
     test("Either.map should work", () => {
       const result = Either.map(right(5), (x: number) => x * 2);
-      expect(rgt(result)).toBe(10);
+      expect(getOrThrow(result)).toBe(10);
     });
 
     test("Either.fold should work", () => {
@@ -651,12 +651,12 @@ describe("Either", () => {
 
     test("Either.all should work", () => {
       const result = Either.all([right(1), right(2)]);
-      expect(rgt(result)).toEqual([1, 2]);
+      expect(getOrThrow(result)).toEqual([1, 2]);
     });
 
     test("Either.chain should work like flatMap", () => {
       const result = Either.chain(right(5), (x: number) => right(x * 3));
-      expect(rgt(result)).toBe(15);
+      expect(getOrThrow(result)).toBe(15);
     });
   });
 });

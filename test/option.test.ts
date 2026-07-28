@@ -1,4 +1,5 @@
 import { describe, test, expect } from "./utils";
+import type { Some } from "../src/Option";
 import {
   none,
   some,
@@ -40,18 +41,18 @@ describe("Option", () => {
         const result = some(42);
         expect(isSome(result)).toBe(true);
         expect(result.$).toBe("Some");
-        expect(unwrap(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should work with strings", () => {
         const result = some("hello");
-        expect(unwrap(result)).toBe("hello");
+        expect(getOrThrow(result)).toBe("hello");
       });
 
       test("should work with objects", () => {
         const obj = { a: 1, b: 2 };
         const result = some(obj);
-        expect(unwrap(result)).toEqual(obj);
+        expect(getOrThrow(result)).toEqual(obj);
       });
     });
   });
@@ -83,7 +84,7 @@ describe("Option", () => {
       test("should return Some for non-null value", () => {
         const result = fromNullable(42);
         expect(isSome(result)).toBe(true);
-        expect(unwrap(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should return None for null", () => {
@@ -99,7 +100,7 @@ describe("Option", () => {
       test("should return Some when predicate passes", () => {
         const result = fromPredicate(10, (x) => x > 5);
         expect(isSome(result)).toBe(true);
-        expect(unwrap(result)).toBe(10);
+        expect(getOrThrow(result)).toBe(10);
       });
 
       test("should return None when predicate fails", () => {
@@ -112,7 +113,7 @@ describe("Option", () => {
       test("should return Some when function succeeds", () => {
         const result = fromThrowable(() => JSON.parse('{"ok":true}'));
         expect(isSome(result)).toBe(true);
-        expect(unwrap(result)).toEqual({ ok: true });
+        expect(getOrThrow(result)).toEqual({ ok: true });
       });
 
       test("should return None when function throws", () => {
@@ -125,7 +126,7 @@ describe("Option", () => {
       test("should return Some when promise resolves", async () => {
         const result = await fromPromise(Promise.resolve("data"));
         expect(isSome(result)).toBe(true);
-        expect(unwrap(result)).toBe("data");
+        expect(getOrThrow(result)).toBe("data");
       });
 
       test("should return None when promise rejects", async () => {
@@ -140,7 +141,7 @@ describe("Option", () => {
       test("should transform Some value", () => {
         const result = map(some(5), (x) => x * 2);
         expect(isSome(result)).toBe(true);
-        expect(unwrap(result)).toBe(10);
+        expect(getOrThrow(result)).toBe(10);
       });
 
       test("should not transform None", () => {
@@ -150,18 +151,18 @@ describe("Option", () => {
 
       test("should change the type", () => {
         const result = map(some(42), (x) => `num: ${x}`);
-        expect(unwrap(result)).toBe("num: 42");
+        expect(getOrThrow(result)).toBe("num: 42");
       });
     });
 
     describe("flatMap", () => {
       test("should chain on Some value", () => {
         const result = flatMap(some(5), (x) => some(x * 2));
-        expect(unwrap(result)).toBe(10);
+        expect(getOrThrow(result)).toBe(10);
       });
 
       test("should not chain on None", () => {
-        const result = flatMap(none<number>(), (x) => some(x * 2));
+        const result = flatMap(none<number>(), (x: number) => some(x * 2));
         expect(isNone(result)).toBe(true);
       });
 
@@ -177,7 +178,7 @@ describe("Option", () => {
       test("should keep Some when predicate passes", () => {
         const result = filter(some(10), (x) => x > 5);
         expect(isSome(result)).toBe(true);
-        expect(unwrap(result)).toBe(10);
+        expect(getOrThrow(result)).toBe(10);
       });
 
       test("should become None when predicate fails", () => {
@@ -186,7 +187,7 @@ describe("Option", () => {
       });
 
       test("should keep None unchanged", () => {
-        const result = filter(none<number>(), (_x) => true);
+        const result = filter(none<number>(), (_x: number) => true);
         expect(isNone(result)).toBe(true);
       });
     });
@@ -231,9 +232,9 @@ describe("Option", () => {
   });
 
   describe("Extract", () => {
-    describe("unwrap", () => {
+    describe("getOrThrow", () => {
       test("should extract value from Some", () => {
-        expect(unwrap(some(42))).toBe(42);
+        expect(getOrThrow(some(42))).toBe(42);
       });
     });
 
@@ -283,7 +284,7 @@ describe("Option", () => {
       test("should combine two Somes", () => {
         const result = zip(some(1), some("a"));
         expect(isSome(result)).toBe(true);
-        expect(unwrap(result)).toEqual([1, "a"]);
+        expect(getOrThrow(result)).toEqual([1, "a"]);
       });
 
       test("should return None if first is None", () => {
@@ -297,9 +298,9 @@ describe("Option", () => {
 
     describe("apply", () => {
       test("should apply function to Some value", () => {
-        const fn = some((x: number) => x * 2);
+        const fn: Option<(x: number) => number> = some((x: number) => x * 2);
         const result = apply(fn, some(10));
-        expect(unwrap(result)).toBe(20);
+        expect(getOrThrow(result)).toBe(20);
       });
 
       test("should return None if fn is None", () => {
@@ -308,7 +309,7 @@ describe("Option", () => {
       });
 
       test("should return None if arg is None", () => {
-        const fn = some((x: number) => x * 2);
+        const fn: Option<(x: number) => number> = some((x: number) => x * 2);
         const result = apply(fn, none());
         expect(isNone(result)).toBe(true);
       });
@@ -317,12 +318,12 @@ describe("Option", () => {
     describe("orElse", () => {
       test("should return first if Some", () => {
         const result = orElse(some(42), none());
-        expect(unwrap(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should return second if first is None", () => {
         const result = orElse(none(), some(42));
-        expect(unwrap(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should return None if both are None", () => {
@@ -337,12 +338,12 @@ describe("Option", () => {
           sideEffect = x;
         });
         expect(sideEffect).toBe(42);
-        expect(unwrap(result)).toBe(42);
+        expect(getOrThrow(result)).toBe(42);
       });
 
       test("should not call side effect on None", () => {
         let sideEffect = 0;
-        tap(none<number>(), (_x) => {
+        tap(none<number>(), (_x: number) => {
           sideEffect = 99;
         });
         expect(sideEffect).toBe(0);
@@ -352,7 +353,7 @@ describe("Option", () => {
 
   describe("Namespace (Option.*)", () => {
     test("Option.some should work like some", () => {
-      expect(unwrap(Option.some(42))).toBe(42);
+      expect(getOrThrow(Option.some(42))).toBe(42);
     });
 
     test("Option.none should work like none", () => {
@@ -360,18 +361,18 @@ describe("Option", () => {
     });
 
     test("Option.fromNullable should work", () => {
-      expect(unwrap(Option.fromNullable("hello"))).toBe("hello");
+      expect(getOrThrow(Option.fromNullable("hello"))).toBe("hello");
       expect(isNone(Option.fromNullable(null))).toBe(true);
     });
 
     test("Option.fromPredicate should work", () => {
       const r = Option.fromPredicate(10, (x: number) => x > 5);
-      expect(unwrap(r)).toBe(10);
+      expect(getOrThrow(r)).toBe(10);
     });
 
     test("Option.map should work", () => {
       const r = Option.map(some(5), (x: number) => x * 2);
-      expect(unwrap(r)).toBe(10);
+      expect(getOrThrow(r)).toBe(10);
     });
 
     test("Option.fold should work", () => {
@@ -380,7 +381,7 @@ describe("Option", () => {
     });
 
     test("Option.new should work like fromNullable", () => {
-      expect(unwrap(Option.new("hello"))).toBe("hello");
+      expect(getOrThrow(Option.new("hello"))).toBe("hello");
       expect(isNone(Option.new(null))).toBe(true);
     });
   });
