@@ -1,6 +1,6 @@
 import "../src/extensions";
 
-import { run } from "./utils";
+import { run_all_tests } from "./utils";
 
 import "./either.test";
 import "./result.test";
@@ -9,4 +9,4 @@ import "./maybe.test";
 import "./pair.test";
 import "./extensions.test";
 
-run();
+run_all_tests();
