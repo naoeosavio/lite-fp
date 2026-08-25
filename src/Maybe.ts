@@ -5,8 +5,8 @@ export type Nothing = null | undefined;
 export type Maybe<T> = T | Nothing;
 
 // Constructors
-export const just = <T>(value: T): NonNullable<T> => value!;
-export const nothing = (): Nothing => undefined;
+export const just = <T>(value: T): Maybe<T> => value;
+export const nothing = <T>(): Maybe<T> => undefined;
 export const nothingNull = (): null => null;
 export const nothingUndefined = (): undefined => undefined;
 
@@ -35,9 +35,9 @@ export const fromPromise = <T>(promise: Promise<T>): Promise<Maybe<T>> =>
 
 // Ops
 export const map = <T, U>(m: Maybe<T>, fn: (v: T) => U): Maybe<U> =>
-  isNothing(m) ? nothing() : just(fn(m));
+  isJust(m) ? just(fn(m)) : nothing();
 export const flatMap = <T, U>(m: Maybe<T>, fn: (v: T) => Maybe<U>): Maybe<U> =>
-  isNothing(m) ? nothing() : just(fn(m));
+  isJust(m) ? fn(m) : nothing();
 export const filter = <T>(
   m: Maybe<T>,
   predicate: (value: T) => boolean,
@@ -46,22 +46,23 @@ export const fold = <T, U>(
   m: Maybe<T>,
   onNothing: () => U,
   onJust: (v: T) => U,
-): U => (isNothing(m) ? onNothing() : onJust(m));
+): U => (isJust(m) ? onJust(m) : onNothing());
 export const match = <T, U>(
   m: Maybe<T>,
-  matcher: { some: (v: T) => U; nothing: () => U },
-): U => (isNothing(m) ? matcher.nothing() : matcher.some(m));
+  matcher: { just: (v: T) => U; nothing: () => U },
+): U => (isJust(m) ? matcher.just(m) : matcher.nothing());
 
 // Extract
+export const unwrap = <T>(m: NonNullable<T>): T => m;
 export const getOrElse = <T>(m: Maybe<T>, defaultValue: T): T =>
-  isNothing(m) ? defaultValue : just(m);
+  isJust(m) ? unwrap(m) : defaultValue;
 export const getOrUndefined = <T>(m: Maybe<T>): T | undefined =>
-  isNothing(m) ? undefined : just(m);
+  isJust(m) ? unwrap(m) : undefined;
 export const getOrNull = <T>(m: Maybe<T>): T | null =>
-  isNothing(m) ? null : just(m);
+  isJust(m) ? unwrap(m) : null;
 export const getOrThrow = <T>(m: Maybe<T>): T => {
-  if (isNothing(m)) throw new Error("Maybe is nothing");
-  else return just(m);
+  if (isJust(m)) return unwrap(m);
+  throw new Error("Maybe is nothing");
 };
 
 // Combine
@@ -72,7 +73,7 @@ export const apply = <T, U>(
   opt: Maybe<T>,
 ): Maybe<U> => (isJust(fn) && isJust(opt) ? just(fn(opt)) : nothing());
 export const orElse = <T>(opt: Maybe<T>, other: Maybe<T>): Maybe<T> =>
-  isNothing(opt) ? other : opt;
+  isJust(opt) ? opt : other;
 export const tap = <T>(m: Maybe<T>, fn: (v: T) => void): Maybe<T> => {
   if (isJust(m)) fn(m);
   return m;
@@ -106,6 +107,7 @@ export const Maybe = {
   match,
 
   // Extract
+  unwrap,
   getOrElse,
   getOrUndefined,
   getOrNull,

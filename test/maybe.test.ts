@@ -22,6 +22,7 @@ import {
   getOrUndefined,
   getOrNull,
   getOrThrow,
+  unwrap,
   zip,
   apply,
   orElse,
@@ -241,7 +242,7 @@ describe("Maybe", () => {
     describe("match", () => {
       test("should call some branch on Just", () => {
         const result = match(42, {
-          some: (v) => `ok: ${v}`,
+          just: (v) => `ok: ${v}`,
           nothing: () => "empty",
         });
         expect(result).toBe("ok: 42");
@@ -249,7 +250,7 @@ describe("Maybe", () => {
 
       test("should call nothing branch on Nothing", () => {
         const result = match(null, {
-          some: (v: number) => `ok: ${v}`,
+          just: (v: number) => `ok: ${v}`,
           nothing: () => "empty",
         });
         expect(result).toBe("empty");
@@ -303,6 +304,21 @@ describe("Maybe", () => {
 
       test("should throw for Nothing (undefined)", () => {
         expect(() => getOrThrow(undefined)).toThrow("Maybe is nothing");
+      });
+    });
+
+    describe("unwrap", () => {
+      test("should return Just value as-is", () => {
+        expect(unwrap(42)).toBe(42);
+      });
+
+      test("should work with objects", () => {
+        const obj = { a: 1 };
+        expect(unwrap(obj)).toBe(obj);
+      });
+
+      test("should work with strings", () => {
+        expect(unwrap("hello")).toBe("hello");
       });
     });
   });
