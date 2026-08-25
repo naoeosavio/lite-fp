@@ -1,4 +1,4 @@
-import { describe, test, expect } from "./utils";
+import { describe, it, assert } from "./utils";
 import {
   just,
   nothing,
@@ -32,406 +32,406 @@ import {
 describe("Maybe", () => {
   describe("Constructors", () => {
     describe("just", () => {
-      test("should return the value as-is", () => {
-        expect(just(42)).toBe(42);
+      it("should return the value as-is", () => {
+        assert.equal(just(42), 42);
       });
 
-      test("should work with strings", () => {
-        expect(just("hello")).toBe("hello");
+      it("should work with strings", () => {
+        assert.equal(just("hello"), "hello");
       });
 
-      test("should work with objects", () => {
+      it("should work with objects", () => {
         const obj = { a: 1 };
-        expect(just(obj)).toBe(obj);
+        assert.equal(just(obj), obj);
       });
     });
 
     describe("nothing", () => {
-      test("should return undefined", () => {
-        expect(nothing()).toBeUndefined();
+      it("should return undefined", () => {
+        assert.equal(nothing(), undefined);
       });
 
-      test("should be isNothing", () => {
-        expect(isNothing(nothing())).toBe(true);
+      it("should be isNothing", () => {
+        assert.equal(isNothing(nothing()), true);
       });
     });
 
     describe("nothingNull", () => {
-      test("should return null", () => {
-        expect(nothingNull()).toBeNull();
+      it("should return null", () => {
+        assert.equal(nothingNull(), null);
       });
 
-      test("should be isNothing", () => {
-        expect(isNothing(nothingNull())).toBe(true);
+      it("should be isNothing", () => {
+        assert.equal(isNothing(nothingNull()), true);
       });
     });
 
     describe("nothingUndefined", () => {
-      test("should return undefined", () => {
-        expect(nothingUndefined()).toBeUndefined();
+      it("should return undefined", () => {
+        assert.equal(nothingUndefined(), undefined);
       });
     });
   });
 
   describe("Guards", () => {
     describe("isJust", () => {
-      test("should return true for non-null/non-undefined", () => {
-        expect(isJust(42)).toBe(true);
-        expect(isJust("hello")).toBe(true);
-        expect(isJust(false)).toBe(true);
-        expect(isJust(0)).toBe(true);
-        expect(isJust("")).toBe(true);
+      it("should return true for non-null/non-undefined", () => {
+        assert.equal(isJust(42), true);
+        assert.equal(isJust("hello"), true);
+        assert.equal(isJust(false), true);
+        assert.equal(isJust(0), true);
+        assert.equal(isJust(""), true);
       });
 
-      test("should return false for null", () => {
-        expect(isJust(null)).toBe(false);
+      it("should return false for null", () => {
+        assert.equal(isJust(null), false);
       });
 
-      test("should return false for undefined", () => {
-        expect(isJust(undefined)).toBe(false);
+      it("should return false for undefined", () => {
+        assert.equal(isJust(undefined), false);
       });
     });
 
     describe("isNothing", () => {
-      test("should return true for null", () => {
-        expect(isNothing(null)).toBe(true);
+      it("should return true for null", () => {
+        assert.equal(isNothing(null), true);
       });
 
-      test("should return true for undefined", () => {
-        expect(isNothing(undefined)).toBe(true);
+      it("should return true for undefined", () => {
+        assert.equal(isNothing(undefined), true);
       });
 
-      test("should return false for any value", () => {
-        expect(isNothing(42)).toBe(false);
-        expect(isNothing("hello")).toBe(false);
-        expect(isNothing(false)).toBe(false);
+      it("should return false for any value", () => {
+        assert.equal(isNothing(42), false);
+        assert.equal(isNothing("hello"), false);
+        assert.equal(isNothing(false), false);
       });
     });
 
     describe("isNull", () => {
-      test("should return true for null only", () => {
-        expect(isNull(null)).toBe(true);
-        expect(isNull(undefined)).toBe(false);
-        expect(isNull(42)).toBe(false);
+      it("should return true for null only", () => {
+        assert.equal(isNull(null), true);
+        assert.equal(isNull(undefined), false);
+        assert.equal(isNull(42), false);
       });
     });
 
     describe("isUndefined", () => {
-      test("should return true for undefined only", () => {
-        expect(isUndefined(undefined)).toBe(true);
-        expect(isUndefined(null)).toBe(false);
-        expect(isUndefined(42)).toBe(false);
+      it("should return true for undefined only", () => {
+        assert.equal(isUndefined(undefined), true);
+        assert.equal(isUndefined(null), false);
+        assert.equal(isUndefined(42), false);
       });
     });
   });
 
   describe("Conversions", () => {
     describe("fromNullable", () => {
-      test("should return value for non-null value", () => {
-        expect(fromNullable(42)).toBe(42);
+      it("should return value for non-null value", () => {
+        assert.equal(fromNullable(42), 42);
       });
 
-      test("should return nothing for null", () => {
-        expect(isNothing(fromNullable(null))).toBe(true);
+      it("should return nothing for null", () => {
+        assert.equal(isNothing(fromNullable(null)), true);
       });
 
-      test("should return nothing for undefined", () => {
-        expect(isNothing(fromNullable(undefined))).toBe(true);
+      it("should return nothing for undefined", () => {
+        assert.equal(isNothing(fromNullable(undefined)), true);
       });
     });
 
     describe("fromPredicate", () => {
-      test("should return value when predicate passes", () => {
-        expect(fromPredicate(10, (x) => x > 5)).toBe(10);
+      it("should return value when predicate passes", () => {
+        assert.equal(fromPredicate(10, (x) => x > 5), 10);
       });
 
-      test("should return nothing when predicate fails", () => {
-        expect(isNothing(fromPredicate(3, (x) => x > 5))).toBe(true);
+      it("should return nothing when predicate fails", () => {
+        assert.equal(isNothing(fromPredicate(3, (x) => x > 5)), true);
       });
     });
 
     describe("fromThrowable", () => {
-      test("should return value when function succeeds", () => {
+      it("should return value when function succeeds", () => {
         const result = fromThrowable(() => JSON.parse('{"ok":true}'));
-        expect(result).toEqual({ ok: true });
+        assert.deepEqual(result, { ok: true });
       });
 
-      test("should return nothing when function throws", () => {
+      it("should return nothing when function throws", () => {
         const result = fromThrowable(() => JSON.parse("invalid"));
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
     });
 
     describe("fromPromise", () => {
-      test("should return value when promise resolves", async () => {
+      it("should return value when promise resolves", async () => {
         const result = await fromPromise(Promise.resolve("data"));
-        expect(result).toBe("data");
+        assert.equal(result, "data");
       });
 
-      test("should return nothing when promise rejects", async () => {
+      it("should return nothing when promise rejects", async () => {
         const result = await fromPromise(Promise.reject("fail"));
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
     });
   });
 
   describe("Operations", () => {
     describe("map", () => {
-      test("should transform Just value", () => {
+      it("should transform Just value", () => {
         const result = map(5, (x) => x * 2);
-        expect(result).toBe(10);
+        assert.equal(result, 10);
       });
 
-      test("should not transform Nothing", () => {
+      it("should not transform Nothing", () => {
         const result = map(null as Maybe<number>, (x) => x * 2);
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
 
-      test("should change type", () => {
+      it("should change type", () => {
         const result = map(42, (x) => `num: ${x}`);
-        expect(result).toBe("num: 42");
+        assert.equal(result, "num: 42");
       });
     });
 
     describe("flatMap", () => {
-      test("should chain on Just value returning Just", () => {
+      it("should chain on Just value returning Just", () => {
         const result = flatMap(5, (x) => x * 2);
-        expect(result).toBe(10);
+        assert.equal(result, 10);
       });
 
-      test("should chain on Just value returning Nothing", () => {
+      it("should chain on Just value returning Nothing", () => {
         const result = flatMap(0, (x) => (x > 0 ? x : nothing()));
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
 
-      test("should not chain on Nothing", () => {
+      it("should not chain on Nothing", () => {
         const result = flatMap(null as Maybe<number>, (x) => x * 2);
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
     });
 
     describe("filter", () => {
-      test("should keep value when predicate passes", () => {
+      it("should keep value when predicate passes", () => {
         const result = filter(10, (x) => x > 5);
-        expect(result).toBe(10);
+        assert.equal(result, 10);
       });
 
-      test("should become nothing when predicate fails", () => {
+      it("should become nothing when predicate fails", () => {
         const result = filter(3, (x) => x > 5);
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
 
-      test("should keep nothing", () => {
+      it("should keep nothing", () => {
         const result = filter(null, (_x: number) => true);
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
     });
 
     describe("fold", () => {
-      test("should call onJust for Just value", () => {
+      it("should call onJust for Just value", () => {
         const result = fold(5, () => 0, (x) => x * 2);
-        expect(result).toBe(10);
+        assert.equal(result, 10);
       });
 
-      test("should call onNothing for Nothing", () => {
+      it("should call onNothing for Nothing", () => {
         const result = fold(null, () => 0, (x: number) => x * 2);
-        expect(result).toBe(0);
+        assert.equal(result, 0);
       });
     });
 
     describe("match", () => {
-      test("should call some branch on Just", () => {
+      it("should call some branch on Just", () => {
         const result = match(42, {
           just: (v) => `ok: ${v}`,
           nothing: () => "empty",
         });
-        expect(result).toBe("ok: 42");
+        assert.equal(result, "ok: 42");
       });
 
-      test("should call nothing branch on Nothing", () => {
+      it("should call nothing branch on Nothing", () => {
         const result = match(null, {
           just: (v: number) => `ok: ${v}`,
           nothing: () => "empty",
         });
-        expect(result).toBe("empty");
+        assert.equal(result, "empty");
       });
     });
   });
 
   describe("Extract", () => {
     describe("getOrElse", () => {
-      test("should return Just value", () => {
-        expect(getOrElse(42, 0)).toBe(42);
+      it("should return Just value", () => {
+        assert.equal(getOrElse(42, 0), 42);
       });
 
-      test("should return default for Nothing (null)", () => {
-        expect(getOrElse(null, 42)).toBe(42);
+      it("should return default for Nothing (null)", () => {
+        assert.equal(getOrElse(null, 42), 42);
       });
 
-      test("should return default for Nothing (undefined)", () => {
-        expect(getOrElse(undefined, 42)).toBe(42);
+      it("should return default for Nothing (undefined)", () => {
+        assert.equal(getOrElse(undefined, 42), 42);
       });
     });
 
     describe("getOrUndefined", () => {
-      test("should return Just value", () => {
-        expect(getOrUndefined(42)).toBe(42);
+      it("should return Just value", () => {
+        assert.equal(getOrUndefined(42), 42);
       });
 
-      test("should return undefined for Nothing", () => {
-        expect(getOrUndefined(null)).toBeUndefined();
+      it("should return undefined for Nothing", () => {
+        assert.equal(getOrUndefined(null), undefined);
       });
     });
 
     describe("getOrNull", () => {
-      test("should return Just value", () => {
-        expect(getOrNull(42)).toBe(42);
+      it("should return Just value", () => {
+        assert.equal(getOrNull(42), 42);
       });
 
-      test("should return null for Nothing", () => {
-        expect(getOrNull(undefined)).toBeNull();
+      it("should return null for Nothing", () => {
+        assert.equal(getOrNull(undefined), null);
       });
     });
 
     describe("getOrThrow", () => {
-      test("should return Just value", () => {
-        expect(getOrThrow(42)).toBe(42);
+      it("should return Just value", () => {
+        assert.equal(getOrThrow(42), 42);
       });
 
-      test("should throw for Nothing (null)", () => {
-        expect(() => getOrThrow(null)).toThrow("Maybe is nothing");
+      it("should throw for Nothing (null)", () => {
+        assert.throws(() => getOrThrow(null), "Maybe is nothing");
       });
 
-      test("should throw for Nothing (undefined)", () => {
-        expect(() => getOrThrow(undefined)).toThrow("Maybe is nothing");
+      it("should throw for Nothing (undefined)", () => {
+        assert.throws(() => getOrThrow(undefined), "Maybe is nothing");
       });
     });
 
     describe("unwrap", () => {
-      test("should return Just value as-is", () => {
-        expect(unwrap(42)).toBe(42);
+      it("should return Just value as-is", () => {
+        assert.equal(unwrap(42), 42);
       });
 
-      test("should work with objects", () => {
+      it("should work with objects", () => {
         const obj = { a: 1 };
-        expect(unwrap(obj)).toBe(obj);
+        assert.equal(unwrap(obj), obj);
       });
 
-      test("should work with strings", () => {
-        expect(unwrap("hello")).toBe("hello");
+      it("should work with strings", () => {
+        assert.equal(unwrap("hello"), "hello");
       });
     });
   });
 
   describe("Combine", () => {
     describe("zip", () => {
-      test("should combine two Justs", () => {
+      it("should combine two Justs", () => {
         const result = zip(1, "a");
-        expect(result).toEqual([1, "a"]);
+        assert.deepEqual(result, [1, "a"]);
       });
 
-      test("should return Nothing if first is Nothing", () => {
+      it("should return Nothing if first is Nothing", () => {
         const result = zip(null, 1);
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
 
-      test("should return Nothing if second is Nothing", () => {
+      it("should return Nothing if second is Nothing", () => {
         const result = zip(1, undefined);
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
     });
 
     describe("apply", () => {
-      test("should apply function to Just value", () => {
+      it("should apply function to Just value", () => {
         const fn: Maybe<(x: number) => number> = (x) => x * 2;
         const result = apply(fn, 10);
-        expect(result).toBe(20);
+        assert.equal(result, 20);
       });
 
-      test("should return Nothing if fn is Nothing", () => {
+      it("should return Nothing if fn is Nothing", () => {
         const result = apply(null as Maybe<(x: number) => number>, 10);
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
 
-      test("should return Nothing if arg is Nothing", () => {
+      it("should return Nothing if arg is Nothing", () => {
         const fn: Maybe<(x: number) => number> = (x) => x * 2;
         const result = apply(fn, null);
-        expect(isNothing(result)).toBe(true);
+        assert.equal(isNothing(result), true);
       });
     });
 
     describe("orElse", () => {
-      test("should return first if Just", () => {
+      it("should return first if Just", () => {
         const result = orElse(42, 99);
-        expect(result).toBe(42);
+        assert.equal(result, 42);
       });
 
-      test("should return second if first is Nothing", () => {
+      it("should return second if first is Nothing", () => {
         const result = orElse(null, 42);
-        expect(result).toBe(42);
+        assert.equal(result, 42);
       });
 
-      test("should return Nothing if both are Nothing", () => {
-        expect(isNothing(orElse(null, undefined))).toBe(true);
+      it("should return Nothing if both are Nothing", () => {
+        assert.equal(isNothing(orElse(null, undefined)), true);
       });
     });
 
     describe("tap", () => {
-      test("should call side effect on Just", () => {
+      it("should call side effect on Just", () => {
         let sideEffect = 0;
         const result = tap(42, (x) => {
           sideEffect = x;
         });
-        expect(sideEffect).toBe(42);
-        expect(result).toBe(42);
+        assert.equal(sideEffect, 42);
+        assert.equal(result, 42);
       });
 
-      test("should not call side effect on Nothing", () => {
+      it("should not call side effect on Nothing", () => {
         let sideEffect = 0;
         tap(null as Maybe<number>, (_x) => {
           sideEffect = 99;
         });
-        expect(sideEffect).toBe(0);
+        assert.equal(sideEffect, 0);
       });
     });
   });
 
   describe("Namespace (Maybe.*)", () => {
-    test("Maybe.just should work like just", () => {
-      expect(Maybe.just(42)).toBe(42);
+    it("Maybe.just should work like just", () => {
+      assert.equal(Maybe.just(42), 42);
     });
 
-    test("Maybe.nothing should work like nothing", () => {
-      expect(Maybe.nothing()).toBeUndefined();
+    it("Maybe.nothing should work like nothing", () => {
+      assert.equal(Maybe.nothing(), undefined);
     });
 
-    test("Maybe.isJust should work like isJust", () => {
-      expect(Maybe.isJust(42)).toBe(true);
-      expect(Maybe.isJust(null)).toBe(false);
+    it("Maybe.isJust should work like isJust", () => {
+      assert.equal(Maybe.isJust(42), true);
+      assert.equal(Maybe.isJust(null), false);
     });
 
-    test("Maybe.isNothing should work like isNothing", () => {
-      expect(Maybe.isNothing(null)).toBe(true);
-      expect(Maybe.isNothing(42)).toBe(false);
+    it("Maybe.isNothing should work like isNothing", () => {
+      assert.equal(Maybe.isNothing(null), true);
+      assert.equal(Maybe.isNothing(42), false);
     });
 
-    test("Maybe.fromNullable should work", () => {
-      expect(Maybe.fromNullable("hello")).toBe("hello");
-      expect(isNothing(Maybe.fromNullable(null))).toBe(true);
+    it("Maybe.fromNullable should work", () => {
+      assert.equal(Maybe.fromNullable("hello"), "hello");
+      assert.equal(isNothing(Maybe.fromNullable(null)), true);
     });
 
-    test("Maybe.map should work", () => {
-      expect(Maybe.map(5, (x: number) => x * 2)).toBe(10);
+    it("Maybe.map should work", () => {
+      assert.equal(Maybe.map(5, (x: number) => x * 2), 10);
     });
 
-    test("Maybe.fold should work", () => {
+    it("Maybe.fold should work", () => {
       const r = Maybe.fold(5, () => 0, (x: number) => x * 2);
-      expect(r).toBe(10);
+      assert.equal(r, 10);
     });
 
-    test("Maybe.new should work like fromNullable", () => {
-      expect(Maybe.new("hello")).toBe("hello");
-      expect(isNothing(Maybe.new(null))).toBe(true);
+    it("Maybe.new should work like fromNullable", () => {
+      assert.equal(Maybe.new("hello"), "hello");
+      assert.equal(isNothing(Maybe.new(null)), true);
     });
   });
 });

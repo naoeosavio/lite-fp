@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.8.1 — 2026-08-24
+
+### Fixes
+
+- Correct Maybe `flatMap` double-wrapping and add `unwrap` extractor
+
+### Refactors
+
+- Simplify test runner and assertion API, migrating test suite to `it`/`assert` helpers
+- Update type guards and streamline Maybe `tap` implementation
+
+### Tests
+
+- Add comprehensive test suites across functional programming modules
+- Introduce lightweight custom test runner and assertion utilities
+
+---
+
 ## v0.8.0 — 2026-07-27
 
 ### Features
